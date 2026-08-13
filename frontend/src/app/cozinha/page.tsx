@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell, WifiOff } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { ExigeLogin } from '@/components/ExigeLogin'
 import { useBrand } from '@/lib/brand/BrandContext'
 import { pedidosApi } from '@/lib/api'
 import type { PaginatedResponse, Pedido, PedidoStatus } from '@/types'
@@ -62,6 +63,14 @@ const cardAnim = {
 }
 
 export default function CozinhaPage() {
+  return (
+    <ExigeLogin>
+      <Cozinha />
+    </ExigeLogin>
+  )
+}
+
+function Cozinha() {
   const { brand } = useBrand()
   const time = useTimer()
   const queryClient = useQueryClient()

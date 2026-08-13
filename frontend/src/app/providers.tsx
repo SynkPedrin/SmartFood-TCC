@@ -5,6 +5,7 @@ import { MotionConfig } from 'framer-motion'
 import { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrandProvider } from '@/lib/brand/BrandContext'
+import { AuthProvider } from '@/lib/auth/AuthContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,7 +17,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {/* Respeita "reduzir movimento" do sistema: quem pediu menos animação
           recebe o estado final direto, sem transição. */}
       <MotionConfig reducedMotion="user">
-        <BrandProvider>
+        <AuthProvider>
+          <BrandProvider>
           {children}
           <Toaster
           position="top-right"
@@ -35,7 +37,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
             error: { iconTheme: { primary: '#ef4444', secondary: '#ffffff' } },
           }}
         />
-        </BrandProvider>
+          </BrandProvider>
+        </AuthProvider>
       </MotionConfig>
     </QueryClientProvider>
   )

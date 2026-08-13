@@ -5,6 +5,8 @@ from rest_framework import status as http, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from smartfood.permissions import PermissaoPedido
+
 from .models import ItemPedido, Pedido
 from .serializers import MudarStatusSerializer, PedidoSerializer
 
@@ -47,6 +49,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
         .all()
     )
     serializer_class = PedidoSerializer
+    # O cliente da mesa cria sem conta; ver e mexer na fila é da equipe.
+    permission_classes = [PermissaoPedido]
     filterset_class = PedidoFilter
     search_fields = ["mesa__numero", "itens__produto__nome"]
     ordering_fields = ["criado_em", "status"]

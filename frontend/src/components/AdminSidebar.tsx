@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, BookOpen, UtensilsCrossed,
-  ClipboardList, Bot, Home, ChefHat, Palette,
+  ClipboardList, Bot, Home, ChefHat, Palette, LogOut,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useBrand } from '@/lib/brand/BrandContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 
 const NAV_SECTIONS = [
   {
@@ -51,6 +52,8 @@ const FOOTER_LINKS = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { brand } = useBrand()
+  const { usuario, sair } = useAuth()
+  const router = useRouter()
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href
@@ -169,6 +172,26 @@ export function AdminSidebar() {
             </Link>
           )
         })}
+
+        {/* Sessão da equipe */}
+        {usuario && (
+          <button
+            onClick={async () => { await sair(); router.replace('/entrar') }}
+            title={`Sair da conta ${usuario.username}`}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+              padding: '9px 12px', borderRadius: 10, marginTop: 6,
+              border: 0, background: 'transparent', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              color: 'var(--text-muted)', textAlign: 'left', minHeight: 40,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#b91c1c' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
+          >
+            <LogOut size={15} style={{ flexShrink: 0 }} />
+            <span className="sidebar-label">Sair ({usuario.first_name || usuario.username})</span>
+          </button>
+        )}
       </div>
     </aside>
   )

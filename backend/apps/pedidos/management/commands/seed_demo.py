@@ -5,10 +5,15 @@ nada para analisar. É idempotente, então pode rodar quantas vezes precisar.
 
     python manage.py seed_demo
     python manage.py seed_demo --limpar   # apaga os dados de demonstração antes
+
+Também cria o usuário da equipe usado para entrar no painel. A senha sai de
+DEMO_PASSWORD quando existir; o padrão só serve para ambiente local.
 """
 
 from decimal import Decimal
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -111,6 +116,17 @@ class Command(BaseCommand):
                 defaults={"capacidade": capacidade, "status": status},
             )
 
+        # Usuário da equipe: sem ele não dá para entrar no painel nem na cozinha.
+        Usuario = get_user_model()
+        senha = getattr(settings, "DEMO_PASSWORD", None) or "smartfood123"
+        equipe, novo_usuario = Usuario.objects.get_or_create(
+            username="admin",
+            defaults={"first_name": "Equipe", "is_staff": True, "is_superuser": True},
+        )
+        if novo_usuario:
+            equipe.set_password(senha)
+            equipe.save()
+
         criados = 0
         if not Pedido.objects.exists():
             for numero, status, itens in PEDIDOS:
@@ -129,6 +145,11 @@ class Command(BaseCommand):
                     mesa.status = Mesa.Status.OCUPADA
                     mesa.save(update_fields=["status", "atualizado_em"])
                 criados += 1
+
+        if novo_usuario:
+            self.stdout.write(
+                self.style.WARNING(f'Usuário "admin" criado com a senha "{senha}". Troque fora do ambiente local.')
+            )
 
         self.stdout.write(
             self.style.SUCCESS(
