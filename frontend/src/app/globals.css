@@ -1325,3 +1325,6 @@ body {
   .inbox { grid-template-columns: minmax(0, 1fr); height: calc(100vh - 170px); }
   .inbox-list { display: none; }
 }
+
+/* usado no botão de atualizar da cozinha enquanto a fila é buscada */
+@keyframes spin { to { transform: rotate(360deg); } }

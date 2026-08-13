@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { categoriasApi, produtosApi, mesasApi } from '@/lib/api'
-import type { Categoria, Produto, Mesa, PaginatedResponse } from '@/types'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import { categoriasApi, produtosApi, mesasApi, pedidosApi } from '@/lib/api'
+import type { Categoria, Produto, Mesa, Pedido, PaginatedResponse } from '@/types'
 import ChefIA from '@/components/ChefIA'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useBrand } from '@/lib/brand/BrandContext'
@@ -474,7 +476,7 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
           Mesa {mesa.numero} · Pedido #{orderNum}
         </p>
         <p style={{ fontSize: '0.9rem', color: 'rgba(17,17,17,0.45)', marginBottom: 32 }}>
-          A cozinha já recebeu seu pedido e começou o preparo.
+          A cozinha já recebeu seu pedido e vai começar o preparo.
         </p>
       </motion.div>
 
@@ -534,7 +536,6 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
 }
 
 /* ─────────────────────────── MAIN ─────────────────────────── */
-let orderCounter = 1050
 
 export default function TotemPage() {
   const [screen, setScreen]     = useState<Screen>('mesa')
@@ -542,6 +543,7 @@ export default function TotemPage() {
   const [cart, setCart]         = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [orderNum, setOrderNum] = useState(0)
+  const queryClient = useQueryClient()
 
   function selectMesa(m: Mesa) {
     setMesa(m)
@@ -567,10 +569,31 @@ export default function TotemPage() {
     setCart(prev => prev.filter(ci => ci.produto.id !== id))
   }
 
+  // O pedido nasce aqui: vai para o banco e cai na fila da cozinha na hora.
+  const enviarPedido = useMutation({
+    mutationFn: () => pedidosApi.criar({
+      mesa: mesa!.id,
+      itens: cart.map(ci => ({ produto: ci.produto.id, quantidade: ci.qtd })),
+    }),
+    onSuccess: (pedido: Pedido) => {
+      setOrderNum(pedido.id)
+      setCartOpen(false)
+      setScreen('success')
+      // a mesa passou a ocupada e a cozinha tem pedido novo
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+    },
+    onError: (err: unknown) => {
+      const detalhe = axios.isAxiosError(err)
+        ? Object.values(err.response?.data ?? {}).flat(2).join(' ')
+        : ''
+      toast.error(detalhe || 'Não consegui enviar seu pedido. Chame o atendimento.')
+    },
+  })
+
   function checkout() {
-    setCartOpen(false)
-    setOrderNum(++orderCounter)
-    setScreen('success')
+    if (!mesa || !cart.length || enviarPedido.isPending) return
+    enviarPedido.mutate()
   }
 
   function reset() {

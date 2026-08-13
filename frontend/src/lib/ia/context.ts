@@ -8,7 +8,7 @@
  * servidor (route handlers). Usa INTERNAL_API_URL, sem NEXT_PUBLIC.
  */
 
-const API = process.env.INTERNAL_API_URL ?? 'http://localhost:8000/api/v1'
+const API = process.env.INTERNAL_API_URL ?? 'http://127.0.0.1:8000/api/v1'
 
 interface Paginated<T> { results?: T[] }
 

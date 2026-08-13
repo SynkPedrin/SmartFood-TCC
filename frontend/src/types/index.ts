@@ -32,6 +32,47 @@ export interface Mesa {
   atualizado_em: string;
 }
 
+export type PedidoStatus =
+  | "recebido"
+  | "preparando"
+  | "pronto"
+  | "entregue"
+  | "cancelado";
+
+export interface ItemPedido {
+  id: number;
+  produto: number;
+  produto_nome: string;
+  quantidade: number;
+  /** Preço congelado no momento do pedido, não o preço atual do produto. */
+  preco_unitario: string;
+  observacao: string;
+  subtotal: string;
+}
+
+export interface Pedido {
+  id: number;
+  mesa: number;
+  mesa_numero: number;
+  status: PedidoStatus;
+  status_display: string;
+  itens: ItemPedido[];
+  total: string;
+  quantidade_itens: number;
+  /** Minutos do item mais demorado: a cozinha trabalha em paralelo. */
+  tempo_preparo_estimado: number;
+  observacao: string;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+/** Corpo enviado pelo totem ao fechar o pedido. */
+export interface NovoPedido {
+  mesa: number;
+  observacao?: string;
+  itens: { produto: number; quantidade: number; observacao?: string }[];
+}
+
 export type PaginatedResponse<T> = {
   count: number;
   next: string | null;

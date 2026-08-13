@@ -20,4 +20,5 @@ urlpatterns = [
     path("api/v1/", include("apps.categorias.urls")),
     path("api/v1/", include("apps.produtos.urls")),
     path("api/v1/", include("apps.mesas.urls")),
+    path("api/v1/", include("apps.pedidos.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

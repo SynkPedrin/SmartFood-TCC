@@ -3,55 +3,56 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell } from 'lucide-react'
+import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell, WifiOff } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useBrand } from '@/lib/brand/BrandContext'
+import { pedidosApi } from '@/lib/api'
+import type { PaginatedResponse, Pedido, PedidoStatus } from '@/types'
 
-type Status = 'novo' | 'preparando' | 'pronto'
+/** A fila da cozinha é o recorte aberto do pedido: recebido, em preparo, pronto. */
+type Coluna = Extract<PedidoStatus, 'recebido' | 'preparando' | 'pronto'>
 
-interface Item { nome: string; qtd: number }
-interface Pedido {
-  id: number
-  mesa: number
-  itens: Item[]
-  hora: string
-  status: Status
-  urgente?: boolean
-}
+/** Minutos de espera a partir dos quais o cartão pede atenção. */
+const LIMITE_URGENTE = 20
 
-const INICIAL: Pedido[] = [
-  { id: 1047, mesa: 3,  itens: [{ nome: 'Frango Grelhado', qtd: 2 }, { nome: 'Suco Natural', qtd: 2 }], hora: '12:45', status: 'novo', urgente: true },
-  { id: 1048, mesa: 7,  itens: [{ nome: 'Pizza Margherita', qtd: 1 }, { nome: 'Coca-Cola', qtd: 2 }],   hora: '12:48', status: 'novo' },
-  { id: 1049, mesa: 11, itens: [{ nome: 'Hambúrguer Artesanal', qtd: 2 }, { nome: 'Batata Frita', qtd: 2 }], hora: '12:50', status: 'novo' },
-  { id: 1045, mesa: 1,  itens: [{ nome: 'Bife Acebolado', qtd: 1 }, { nome: 'Batata Frita', qtd: 1 }, { nome: 'Suco', qtd: 1 }], hora: '12:38', status: 'preparando', urgente: true },
-  { id: 1046, mesa: 12, itens: [{ nome: 'Salada Caesar', qtd: 2 }], hora: '12:42', status: 'preparando' },
-  { id: 1043, mesa: 5,  itens: [{ nome: 'Lasanha Bolonhesa', qtd: 3 }, { nome: 'Vinho Tinto', qtd: 1 }], hora: '12:20', status: 'pronto' },
-  { id: 1044, mesa: 9,  itens: [{ nome: 'Risoto de Camarão', qtd: 2 }], hora: '12:25', status: 'pronto' },
-]
+/** De quanto em quanto tempo a cozinha busca novidade no servidor. */
+const INTERVALO_ATUALIZACAO = 5_000
 
-const COLS: { key: Status; label: string; color: string; bg: string; border: string; shadow: string; actionLabel: string; nextStatus: Status | null }[] = [
-  { key: 'novo',       label: 'Novos Pedidos', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Iniciar Preparo', nextStatus: 'preparando' },
+const COLS: { key: Coluna; label: string; color: string; bg: string; border: string; shadow: string; actionLabel: string; nextStatus: PedidoStatus }[] = [
+  { key: 'recebido',   label: 'Novos Pedidos', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Iniciar Preparo', nextStatus: 'preparando' },
   { key: 'preparando', label: 'Em Preparo',    color: '#f59e0b', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Marcar Pronto',   nextStatus: 'pronto' },
-  { key: 'pronto',     label: 'Prontos',       color: '#10b981', bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Entregue ✓',      nextStatus: null },
+  { key: 'pronto',     label: 'Prontos',       color: '#10b981', bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Entregue',        nextStatus: 'entregue' },
 ]
+
+const agora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
 function useTimer() {
-  const [time, setTime] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+  // Começa vazio de propósito: a hora do servidor nunca bate com a do navegador
+  // e a diferença quebrava a hidratação do React.
+  const [time, setTime] = useState('')
   useEffect(() => {
-    const id = setInterval(() => setTime(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })), 1000)
+    setTime(agora())
+    const id = setInterval(() => setTime(agora()), 1000)
     return () => clearInterval(id)
   }, [])
   return time
 }
 
-function elapsed(hora: string): string {
-  const [h, m] = hora.split(':').map(Number)
-  const now = new Date()
-  const diff = (now.getHours() * 60 + now.getMinutes()) - (h * 60 + m)
-  if (diff <= 0) return '< 1 min'
-  if (diff < 60) return `${diff} min`
-  return `${Math.floor(diff / 60)}h ${diff % 60}min`
+/** Minutos desde que o pedido entrou na fila. */
+function esperaEmMinutos(criadoEm: string): number {
+  return Math.max(0, Math.floor((Date.now() - new Date(criadoEm).getTime()) / 60_000))
+}
+
+function formatarEspera(minutos: number): string {
+  if (minutos < 1) return '< 1 min'
+  if (minutos < 60) return `${minutos} min`
+  return `${Math.floor(minutos / 60)}h ${minutos % 60}min`
+}
+
+function hora(criadoEm: string): string {
+  return new Date(criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
 const cardAnim = {
@@ -62,20 +63,35 @@ const cardAnim = {
 
 export default function CozinhaPage() {
   const { brand } = useBrand()
-  const [pedidos, setPedidos] = useState<Pedido[]>(INICIAL)
   const time = useTimer()
+  const queryClient = useQueryClient()
 
-  function avancar(id: number, next: Status | null) {
-    if (!next) {
-      setPedidos(prev => prev.filter(p => p.id !== id))
-      toast.success('Pedido marcado como entregue!')
-      return
-    }
-    setPedidos(prev => prev.map(p => p.id === id ? { ...p, status: next } : p))
-    toast.success(next === 'preparando' ? 'Preparo iniciado!' : 'Pedido pronto!')
-  }
+  // A fila vem do banco e se atualiza sozinha: a cozinha não fica com tela velha
+  // se o pedido nascer no totem de outra pessoa.
+  const { data, isError, isFetching, refetch } = useQuery<PaginatedResponse<Pedido>>({
+    queryKey: ['pedidos', 'fila'],
+    queryFn: () => pedidosApi.listar({ aberto: true }),
+    refetchInterval: INTERVALO_ATUALIZACAO,
+    refetchOnWindowFocus: true,
+  })
 
-  const byStatus = (s: Status) => pedidos.filter(p => p.status === s)
+  const pedidos = data?.results ?? []
+
+  const mudarStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: PedidoStatus }) =>
+      pedidosApi.mudarStatus(id, status),
+    onSuccess: (_res, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      toast.success(
+        status === 'preparando' ? 'Preparo iniciado' :
+        status === 'pronto' ? 'Pedido pronto' : 'Pedido entregue',
+      )
+    },
+    onError: () => toast.error('Não consegui atualizar o pedido'),
+  })
+
+  const byStatus = (s: Coluna) => pedidos.filter(p => p.status === s)
 
   return (
     <div className="kitchen-shell">
@@ -92,7 +108,7 @@ export default function CozinhaPage() {
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {byStatus('novo').length > 0 && (
+            {byStatus('recebido').length > 0 && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '5px 12px', borderRadius: 10,
@@ -101,22 +117,35 @@ export default function CozinhaPage() {
               }}>
                 <Bell size={13} style={{ color: '#ef4444' }} />
                 <span style={{ fontSize: 13, fontWeight: 800, color: '#ef4444' }}>
-                  {byStatus('novo').length} novo{byStatus('novo').length > 1 ? 's' : ''}
+                  {byStatus('recebido').length} novo{byStatus('recebido').length > 1 ? 's' : ''}
                 </span>
               </div>
             )}
           </div>
+
+          {isError && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 12px', borderRadius: 10,
+              background: 'rgba(239,68,68,0.10)', border: '2px solid rgba(239,68,68,0.35)',
+            }}>
+              <WifiOff size={13} style={{ color: '#ef4444' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Sem conexão com a API</span>
+            </div>
+          )}
 
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>
             {time}
           </div>
 
           <button
-            onClick={() => { setPedidos([...INICIAL]); toast.success('Dados atualizados') }}
+            onClick={() => refetch()}
+            disabled={isFetching}
             className="btn btn-ghost btn-sm"
             style={{ gap: 7 }}
           >
-            <RefreshCw size={13} /> Atualizar
+            <RefreshCw size={13} style={isFetching ? { animation: 'spin 0.9s linear infinite' } : undefined} />
+            Atualizar
           </button>
 
           <Link href="/" className="btn btn-ghost btn-sm" style={{ gap: 7 }}>
@@ -166,7 +195,10 @@ export default function CozinhaPage() {
                 )}
 
                 <AnimatePresence>
-                  {orders.map(pedido => (
+                  {orders.map(pedido => {
+                    const espera = esperaEmMinutos(pedido.criado_em)
+                    const urgente = espera >= LIMITE_URGENTE
+                    return (
                     <motion.div
                       key={pedido.id}
                       variants={cardAnim}
@@ -174,7 +206,7 @@ export default function CozinhaPage() {
                       animate="visible"
                       exit="exit"
                       layout
-                      className={`kitchen-order-card${pedido.urgente ? ' urgente' : ''}`}
+                      className={`kitchen-order-card${urgente ? ' urgente' : ''}`}
                     >
                       {/* Top row */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -185,12 +217,12 @@ export default function CozinhaPage() {
                               fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em',
                               color: 'var(--text-primary)', lineHeight: 1,
                             }}>
-                              {pedido.mesa}
+                              {pedido.mesa_numero}
                             </div>
                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                               Mesa
                             </div>
-                            {pedido.urgente && (
+                            {urgente && (
                               <span style={{
                                 padding: '2px 8px', borderRadius: 7,
                                 background: 'rgba(239,68,68,0.12)',
@@ -210,9 +242,9 @@ export default function CozinhaPage() {
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: col.color }}>
                             <Clock size={11} />
-                            {elapsed(pedido.hora)}
+                            {formatarEspera(espera)}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{pedido.hora}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{hora(pedido.criado_em)}</div>
                         </div>
                       </div>
 
@@ -224,18 +256,25 @@ export default function CozinhaPage() {
                         marginBottom: 12,
                       }}>
                         {pedido.itens.map((item, i) => (
-                          <div key={i} style={{
+                          <div key={item.id} style={{
                             display: 'flex', justifyContent: 'space-between',
                             fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
                             padding: '3px 0',
                             borderBottom: i < pedido.itens.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                           }}>
-                            <span>{item.nome}</span>
+                            <span>
+                              {item.produto_nome}
+                              {item.observacao && (
+                                <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>
+                                  {item.observacao}
+                                </span>
+                              )}
+                            </span>
                             <span style={{
                               fontFamily: 'Inter, sans-serif',
                               fontWeight: 800, color: col.color,
                               minWidth: 24, textAlign: 'right',
-                            }}>×{item.qtd}</span>
+                            }}>×{item.quantidade}</span>
                           </div>
                         ))}
                       </div>
@@ -243,7 +282,8 @@ export default function CozinhaPage() {
                       {/* Action button */}
                       {col.nextStatus !== undefined && (
                         <button
-                          onClick={() => avancar(pedido.id, col.nextStatus)}
+                          onClick={() => mudarStatus.mutate({ id: pedido.id, status: col.nextStatus })}
+                          disabled={mudarStatus.isPending}
                           style={{
                             width: '100%', padding: '10px',
                             borderRadius: 10, border: `2px solid ${col.border}`,
@@ -262,7 +302,8 @@ export default function CozinhaPage() {
                         </button>
                       )}
                     </motion.div>
-                  ))}
+                    )
+                  })}
                 </AnimatePresence>
               </div>
             </div>
