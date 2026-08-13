@@ -50,10 +50,19 @@ Django project named `smartfood`. All domain logic lives in `apps/`:
 | `apps/categorias` | Product categories |
 | `apps/produtos` | Menu items (FK → Categoria, image upload via Pillow) |
 | `apps/mesas` | Tables with status choices and auto-generated QR codes |
+| `apps/pedidos` | Orders + items, kitchen queue, WebSocket consumer, `seed_demo` command |
 
 Each app follows the same layout: `models.py → serializers.py → views.py → urls.py`. All apps register at `api/v1/` - see [backend/smartfood/urls.py](backend/smartfood/urls.py).
 
-DRF is configured with `drf-spectacular` (OpenAPI), `django-filter`, pagination (20/page), and search/ordering filters globally. Django Channels + Redis are wired up (`ASGI_APPLICATION` set, `CHANNEL_LAYERS` configured) for future WebSocket features - no consumers exist yet.
+DRF is configured with `drf-spectacular` (OpenAPI), `django-filter`, pagination (20/page), and search/ordering filters globally.
+
+**Orders** are the core domain. `ItemPedido.preco_unitario` freezes the price at order time. `Pedido.TRANSICOES` is an explicit state machine validated in the serializer (no skipping, no going back, no cancelling once `pronto`). Creating an order occupies the table; closing its last open order frees it.
+
+**Auth**: DRF token (`rest_framework.authtoken`). Default permission is `smartfood.permissions.LeituraPublicaEscritaAutenticada` (public read, authenticated write). `PermissaoPedido` makes `create` public - the customer at the table has no account - while listing and mutating require login. Endpoints: `/api/v1/auth/login/`, `/logout/`, `/eu/`.
+
+**Realtime**: `apps/pedidos/consumers.py` serves `ws/cozinha/`, authenticated by the same token via query string. A `post_save` signal sends a short notice (id, status, novo) and the client refetches from the API, so the DB stays the single source of truth. `CHANNEL_LAYERS` picks Redis only if the host actually resolves, else falls back to in-memory - the compose `REDIS_URL` points at host `redis`, which does not exist outside Docker.
+
+Local dev without Docker: `DATABASE_URL="sqlite:///db.sqlite3"` and Python 3.9 + Django 4.2 in `backend/.venv-local`. Run `python manage.py seed_demo` to populate; it also creates user `admin`.
 
 Config is 12-factor via `python-decouple`. `DATABASE_URL` takes priority over individual `DB_*` vars when present and valid.
 
@@ -67,6 +76,10 @@ Next.js 14 App Router. Pages live in `src/app/`:
 | `/categorias` | Category CRUD |
 | `/produtos` | Product CRUD |
 | `/mesas` | Table management |
+| `/totem` | Customer ordering (public) |
+| `/cozinha` | Kitchen queue (requires login) |
+| `/admin/pedidos` | Order history and daily numbers |
+| `/entrar` | Team login |
 
 **Data layer**: TanStack Query (staleTime 30 s) wraps all API calls. The axios client and per-resource API helpers are in [frontend/src/lib/api.ts](frontend/src/lib/api.ts). All TypeScript types are in [frontend/src/types/index.ts](frontend/src/types/index.ts).
 

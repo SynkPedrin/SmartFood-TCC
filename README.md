@@ -18,7 +18,7 @@ Um único sistema atende três públicos: o **cliente** no totem da mesa, a **co
 |--------|-----------|
 | Backend | Django 5 + Django REST Framework |
 | Banco | PostgreSQL 16 (porta **5433** no host, para não conflitar com instalações locais) |
-| Realtime | Django Channels + Redis (infra configurada) |
+| Realtime | Django Channels + Redis (WebSocket da cozinha) |
 | Frontend | Next.js 14 (App Router) + TypeScript |
 | Estado remoto | TanStack Query |
 | IA | Groq (OpenAI-compat), chamada por route handler do Next |
@@ -47,6 +47,7 @@ docker compose up --build
 cd backend
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py seed_demo    # cardápio, salão e usuário da equipe
 python manage.py runserver
 
 # frontend
@@ -62,10 +63,12 @@ backend/            projeto Django "smartfood"
   apps/categorias/  categorias do cardápio
   apps/produtos/    itens do cardápio (FK categoria, upload de imagem)
   apps/mesas/       mesas do salão, status e QR code automático
+  apps/pedidos/     pedido, itens, fila da cozinha, WebSocket e seed
 frontend/           Next.js 14 (App Router)
   src/app/          páginas: /, /totem, /cozinha, /admin/*
   src/lib/api.ts    client axios e helpers por recurso
   src/lib/ia/       persona, snapshot do banco e cérebro da conta
+  src/lib/auth/     sessão da equipe (token)
   cerebro/          vault Obsidian: memória de longo prazo da IA, isolada por conta
 ```
 
@@ -92,6 +95,15 @@ ordenação. A documentação é gerada por `drf-spectacular`.
 | Categorias | `/api/v1/categorias/` |
 | Produtos | `/api/v1/produtos/` |
 | Mesas | `/api/v1/mesas/` |
+| Pedidos | `/api/v1/pedidos/` |
+| Avançar pedido | `POST /api/v1/pedidos/{id}/status/` |
+| Autenticação | `/api/v1/auth/login/`, `/logout/`, `/eu/` |
+| Fila ao vivo | `ws://<host>/ws/cozinha/?token=<chave>` |
+
+### Acesso
+
+Leitura do cardápio e criação de pedido são públicas: quem pede é o cliente na mesa, que
+não tem conta. Todo o resto exige token da equipe. Detalhes em [docs/05-api.md](docs/05-api.md).
 
 ## IA com cérebro por conta
 
@@ -116,17 +128,23 @@ A chave da Groq vive apenas no servidor: o navegador nunca fala com a API do mod
 Implementado e funcionando de ponta a ponta:
 
 - CRUD de categorias, produtos e mesas (API + telas)
-- Documentação automática da API
-- Totem, cozinha e painel administrativo
+- **Pedido completo**: o totem grava no banco, a cozinha trabalha a fila e o admin
+  acompanha receita, ticket médio e histórico
+- Máquina de estados do pedido validada no servidor: não pula etapa, não volta
+- Preço congelado no item: reajuste de cardápio não reescreve venda antiga
+- **Tempo real** na cozinha por WebSocket, com busca periódica como rede de segurança
+- **Autenticação por token**, com escrita fechada e totem público
+- 22 testes automatizados do núcleo
+- Documentação automática da API e [documentação técnica](docs/)
 - Personalização white-label por conta
 - Assistente de IA com dados reais e cérebro por conta
 
-Em desenvolvimento:
+Fora do escopo desta versão:
 
-- Persistência de **pedidos** (as telas de pedido e cozinha ainda usam dados de exemplo)
-- Autenticação e controle de acesso
-- Consumers WebSocket para atualizar a cozinha em tempo real
-- Testes automatizados
+- Pagamento e emissão fiscal
+- Controle de estoque
+- Teste automatizado de interface
+- Múltiplas unidades por conta
 
 ## Deploy na Vercel
 
@@ -170,3 +188,18 @@ Veja [.env.example](.env.example). As principais:
 | `INTERNAL_API_URL` | URL da API vista pelo servidor do Next |
 | `GROQ_API_KEY`, `GROQ_MODEL` | IA |
 | `CEREBRO_DIR`, `CEREBRO_CONTA_PADRAO` | Vault do cérebro |
+| `REDIS_URL` | Camada de canal do WebSocket (sem ela, cai para memória) |
+| `NEXT_PUBLIC_WS_URL` | Base do WebSocket vista pelo navegador |
+| `DEMO_PASSWORD` | Senha do usuário criado por `seed_demo` |
+
+## Documentação técnica
+
+Requisitos, arquitetura com as decisões de projeto, modelo de dados, casos de uso, API,
+testes e implantação estão em [docs/](docs/).
+
+## Testes
+
+```bash
+cd backend
+python manage.py test
+```
