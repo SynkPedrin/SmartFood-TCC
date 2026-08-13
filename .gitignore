@@ -42,9 +42,9 @@ Thumbs.db
 *.swp
 
 # Obsidian (cache de layout do vault do cerebro)
-cerebro/.obsidian/workspace.json
-cerebro/.obsidian/workspace-mobile.json
-cerebro/.trash/
+frontend/cerebro/.obsidian/workspace.json
+frontend/cerebro/.obsidian/workspace-mobile.json
+frontend/cerebro/.trash/
 
 # Ferramental de agente (nao faz parte do TCC)
 .agents/

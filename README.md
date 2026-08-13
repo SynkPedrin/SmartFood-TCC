@@ -66,7 +66,7 @@ frontend/           Next.js 14 (App Router)
   src/app/          páginas: /, /totem, /cozinha, /admin/*
   src/lib/api.ts    client axios e helpers por recurso
   src/lib/ia/       persona, snapshot do banco e cérebro da conta
-cerebro/            vault Obsidian: memória de longo prazo da IA, isolada por conta
+  cerebro/          vault Obsidian: memória de longo prazo da IA, isolada por conta
 ```
 
 ## Telas
@@ -96,7 +96,7 @@ ordenação. A documentação é gerada por `drf-spectacular`.
 ## IA com cérebro por conta
 
 A IA responde a partir de três camadas: a **persona** do modo (`admin` ou `totem`), o
-**cérebro da conta** (vault Obsidian em `cerebro/Contas/<slug>/`) e um **snapshot ao vivo**
+**cérebro da conta** (vault Obsidian em `frontend/cerebro/Contas/<slug>/`) e um **snapshot ao vivo**
 do banco. Em conflito de preço ou disponibilidade, o banco tem precedência.
 
 Cada conta tem memória própria e isolada: identidade, diretrizes, cardápio comentado,
@@ -127,6 +127,36 @@ Em desenvolvimento:
 - Autenticação e controle de acesso
 - Consumers WebSocket para atualizar a cozinha em tempo real
 - Testes automatizados
+
+## Deploy na Vercel
+
+A Vercel hospeda o **frontend**. Django, PostgreSQL e Redis precisam de outro provedor
+(Render, Railway, Fly.io), porque a Vercel não roda processos persistentes com banco.
+
+Ao importar o repositório em [vercel.com/new](https://vercel.com/new):
+
+| Campo | Valor |
+|-------|-------|
+| Framework Preset | Next.js (detectado) |
+| **Root Directory** | `frontend` |
+| Build Command | padrão (`next build`) |
+
+Variáveis de ambiente do projeto na Vercel:
+
+| Variável | Valor |
+|----------|-------|
+| `GROQ_API_KEY` | sua chave da Groq (obrigatória para a IA) |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` |
+| `CEREBRO_CONTA_PADRAO` | `smartfood-demo` |
+| `NEXT_PUBLIC_API_URL` | URL pública da API Django, quando existir |
+| `INTERNAL_API_URL` | a mesma URL, usada pelo servidor do Next |
+
+O vault do cérebro fica em `frontend/cerebro/` justamente para viajar junto no deploy. As
+rotas de IA leem esses arquivos em tempo de execução, então o `next.config.js` declara
+`outputFileTracingIncludes` para incluí-los no bundle serverless.
+
+Sem um backend público, o site sobe funcionando: a IA responde com o cérebro da conta e
+avisa com transparência que os dados ao vivo do restaurante estão indisponíveis.
 
 ## Variáveis de ambiente
 

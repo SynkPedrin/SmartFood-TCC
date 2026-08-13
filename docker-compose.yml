@@ -52,11 +52,8 @@ services:
     container_name: smartfood_frontend
     restart: unless-stopped
     env_file: .env
-    environment:
-      CEREBRO_DIR: /cerebro
     volumes:
       - ./frontend:/app
-      - ./cerebro:/cerebro
       - /app/node_modules
       - /app/.next
     ports:

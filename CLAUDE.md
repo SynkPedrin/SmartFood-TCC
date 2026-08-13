@@ -88,7 +88,7 @@ Global CSS and ambient background orbs are in [frontend/src/app/globals.css](fro
 
 ### Cérebro (vault Obsidian por conta)
 
-`cerebro/` é um vault Obsidian que serve de memória de longo prazo da IA. Estrutura:
+`frontend/cerebro/` é um vault Obsidian que serve de memória de longo prazo da IA. Estrutura:
 
 - `Sistema/` - conhecimento compartilhado do produto (todas as contas leem).
 - `Contas/<slug>/` - cérebro isolado de cada conta: `Conta.md` (frontmatter com nome,
@@ -97,7 +97,7 @@ Global CSS and ambient background orbs are in [frontend/src/app/globals.css](fro
 - `Templates/Conta/` - molde para uma conta nova.
 
 O loader é [frontend/src/lib/ia/cerebro.ts](frontend/src/lib/ia/cerebro.ts) (server-only,
-usa `fs`): localiza o vault via `CEREBRO_DIR` ou subindo a partir do `cwd`, valida o slug
+usa `fs`): localiza o vault via `CEREBRO_DIR` ou a partir do `cwd`, valida o slug
 contra `^[a-z0-9][a-z0-9-]*$` (impede path traversal), lê na ordem
 Conta → Identidade → Diretrizes → Cardapio → Operacao → últimas 5 memórias, corta em 12k
 caracteres e cacheia 15s.

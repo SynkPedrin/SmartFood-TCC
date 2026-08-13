@@ -48,15 +48,19 @@ export interface Cerebro {
 
 let rootCache: string | null | undefined
 
-/** Candidatos: env explícita, cwd (repo root) e um/dois níveis acima (cwd = frontend/). */
+/**
+ * Candidatos, em ordem: env explícita, o vault que viaja com o app (`frontend/cerebro`,
+ * o caso normal em dev e em serverless) e a raiz do repositório, para scripts que rodam
+ * de um nível acima.
+ */
 function candidatos(): string[] {
   const env = process.env.CEREBRO_DIR
   const cwd = process.cwd()
   return [
     ...(env ? [path.resolve(env)] : []),
     path.join(cwd, 'cerebro'),
+    path.join(cwd, 'frontend', 'cerebro'),
     path.join(cwd, '..', 'cerebro'),
-    path.join(cwd, '..', '..', 'cerebro'),
   ]
 }
 
