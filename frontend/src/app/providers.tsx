@@ -1,6 +1,7 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'framer-motion'
 import { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrandProvider } from '@/lib/brand/BrandContext'
@@ -12,9 +13,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrandProvider>
-        {children}
-        <Toaster
+      {/* Respeita "reduzir movimento" do sistema: quem pediu menos animação
+          recebe o estado final direto, sem transição. */}
+      <MotionConfig reducedMotion="user">
+        <BrandProvider>
+          {children}
+          <Toaster
           position="top-right"
           toastOptions={{
             style: {
@@ -31,7 +35,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
             error: { iconTheme: { primary: '#ef4444', secondary: '#ffffff' } },
           }}
         />
-      </BrandProvider>
+        </BrandProvider>
+      </MotionConfig>
     </QueryClientProvider>
   )
 }

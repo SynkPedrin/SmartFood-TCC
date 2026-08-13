@@ -32,7 +32,7 @@ const NAV_SECTIONS = [
   {
     label: 'IA SmartFood',
     items: [
-      { href: '/admin/ia', icon: Bot, label: 'Assistente IA' },
+      { href: '/admin/ia', icon: Bot, label: 'Conversas' },
     ],
   },
   {

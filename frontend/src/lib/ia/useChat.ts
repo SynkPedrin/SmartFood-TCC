@@ -20,13 +20,14 @@ const nextId = () => seq++
  * Consome o corpo da resposta como texto incremental e atualiza a bolha
  * do assistente em tempo real.
  */
-export function useIAChat(mode: IAMode, initial: ChatMsg[]) {
+export function useIAChat(mode: IAMode, initial: ChatMsg[], contaOverride?: string) {
   const [messages, setMessages] = useState<ChatMsg[]>(initial)
   const [loading, setLoading] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
-  // A conta ativa decide qual cérebro do vault responde.
+  // A conta decide qual cérebro do vault responde. O inbox passa a conversa
+  // selecionada; sem override, vale a conta ativa da marca.
   const { brand } = useBrand()
-  const conta = brand.accountId
+  const conta = contaOverride ?? brand.accountId
 
   const send = useCallback(async (text: string) => {
     const prompt = text.trim()
@@ -99,9 +100,10 @@ export function useIAChat(mode: IAMode, initial: ChatMsg[]) {
     }
   }, [messages, loading, mode, conta])
 
-  const reset = useCallback((greeting: ChatMsg) => {
+  /** Recomeça a conversa. Aceita uma mensagem só ou uma thread inteira (troca de conversa). */
+  const reset = useCallback((inicial: ChatMsg | ChatMsg[]) => {
     abortRef.current?.abort()
-    setMessages([greeting])
+    setMessages(Array.isArray(inicial) ? inicial : [inicial])
     setLoading(false)
   }, [])
 
