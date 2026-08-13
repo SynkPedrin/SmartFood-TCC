@@ -9,6 +9,9 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost").split(",")
 
 DJANGO_APPS = [
+    # antes do admin de proposito: e o daphne que passa a servir o runserver,
+    # senao o runserver sobe em WSGI e o WebSocket nao existe
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -85,12 +88,39 @@ else:
         }
     }
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [config("REDIS_URL", default="redis://redis:6379/0")]},
+# Com Redis, o aviso da cozinha funciona entre vários processos. Sem Redis
+# (máquina de desenvolvimento sem Docker), cai para a camada em memória, que
+# vale só dentro do processo: suficiente para desenvolver e apresentar.
+#
+# A escolha é por alcance real, não pela variável existir: no docker-compose a
+# REDIS_URL aponta para o host "redis", que fora do Docker não resolve, e o
+# WebSocket morria tentando conectar.
+_redis_url = config("REDIS_URL", default="")
+
+
+def _alcancavel(url: str) -> bool:
+    import socket
+    from urllib.parse import urlparse
+
+    host = urlparse(url).hostname
+    if not host:
+        return False
+    try:
+        socket.gethostbyname(host)
+        return True
+    except OSError:
+        return False
+
+
+if _redis_url and _alcancavel(_redis_url):
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [_redis_url]},
+        }
     }
-}
+else:
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

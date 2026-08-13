@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell, WifiOff } from 'lucide-react'
+import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell, WifiOff, Radio } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { ExigeLogin } from '@/components/ExigeLogin'
 import { useBrand } from '@/lib/brand/BrandContext'
 import { pedidosApi } from '@/lib/api'
+import { useFilaAoVivo } from '@/lib/pedidos/useFilaAoVivo'
 import type { PaginatedResponse, Pedido, PedidoStatus } from '@/types'
 
 /** A fila da cozinha é o recorte aberto do pedido: recebido, em preparo, pronto. */
@@ -18,8 +19,9 @@ type Coluna = Extract<PedidoStatus, 'recebido' | 'preparando' | 'pronto'>
 /** Minutos de espera a partir dos quais o cartão pede atenção. */
 const LIMITE_URGENTE = 20
 
-/** De quanto em quanto tempo a cozinha busca novidade no servidor. */
-const INTERVALO_ATUALIZACAO = 5_000
+/** Busca periódica: rápida quando o WebSocket está fora, folgada quando está no ar. */
+const INTERVALO_SEM_SOCKET = 5_000
+const INTERVALO_COM_SOCKET = 30_000
 
 const COLS: { key: Coluna; label: string; color: string; bg: string; border: string; shadow: string; actionLabel: string; nextStatus: PedidoStatus }[] = [
   { key: 'recebido',   label: 'Novos Pedidos', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Iniciar Preparo', nextStatus: 'preparando' },
@@ -75,12 +77,16 @@ function Cozinha() {
   const time = useTimer()
   const queryClient = useQueryClient()
 
-  // A fila vem do banco e se atualiza sozinha: a cozinha não fica com tela velha
-  // se o pedido nascer no totem de outra pessoa.
+  // O WebSocket avisa na hora que a fila mudou; a busca periódica fica como
+  // rede de segurança e desacelera quando o socket está no ar.
+  const { conectado } = useFilaAoVivo(() => {
+    queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+  })
+
   const { data, isError, isFetching, refetch } = useQuery<PaginatedResponse<Pedido>>({
     queryKey: ['pedidos', 'fila'],
     queryFn: () => pedidosApi.listar({ aberto: true }),
-    refetchInterval: INTERVALO_ATUALIZACAO,
+    refetchInterval: conectado ? INTERVALO_COM_SOCKET : INTERVALO_SEM_SOCKET,
     refetchOnWindowFocus: true,
   })
 
@@ -130,6 +136,18 @@ function Cozinha() {
                 </span>
               </div>
             )}
+          </div>
+
+          <div
+            title={conectado ? 'Recebendo pedidos em tempo real' : 'Sem tempo real: atualizando a cada 5s'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 11.5, fontWeight: 700,
+              color: conectado ? '#10b981' : 'var(--text-muted)',
+            }}
+          >
+            <Radio size={13} />
+            {conectado ? 'ao vivo' : 'periódico'}
           </div>
 
           {isError && (
