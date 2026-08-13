@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+.venv-local/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Obsidian (cache de layout do vault do cerebro)
+cerebro/.obsidian/workspace.json
+cerebro/.obsidian/workspace-mobile.json
+cerebro/.trash/
+
+# Ferramental de agente (nao faz parte do TCC)
+.agents/
+.claude/
+skills-lock.json
+
+# Build artifacts
+*.tsbuildinfo
