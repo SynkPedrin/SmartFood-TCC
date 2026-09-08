@@ -30,8 +30,14 @@ function Formulario() {
       await entrar(username.trim(), password)
       router.replace(destino)
     } catch (err) {
-      const detalhe = axios.isAxiosError(err) ? err.response?.data?.detail : null
-      setErro(detalhe || 'Não consegui entrar. Verifique usuário e senha.')
+      // Sem resposta do servidor é problema de rede, não de senha errada. Dizer
+      // "verifique usuário e senha" nesse caso manda a pessoa procurar no lugar errado.
+      if (axios.isAxiosError(err) && !err.response) {
+        setErro('Não consegui falar com o servidor. Verifique se a API está no ar.')
+      } else {
+        const detalhe = axios.isAxiosError(err) ? err.response?.data?.detail : null
+        setErro(detalhe || 'Não consegui entrar. Verifique usuário e senha.')
+      }
       setEnviando(false)
     }
   }

@@ -171,7 +171,13 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
+# Origens do frontend. Vem de CORS_ORIGINS quando definida, separada por vírgula,
+# porque a porta 3000 nem sempre está livre na máquina de quem desenvolve.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origem.strip()
+    for origem in config(
+        "CORS_ORIGINS",
+        default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
+    ).split(",")
+    if origem.strip()
 ]

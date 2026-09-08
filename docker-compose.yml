@@ -57,7 +57,8 @@ services:
       - /app/node_modules
       - /app/.next
     ports:
-      - "3000:3000"
+      # porta do host configurável: 3000 nem sempre está livre na máquina
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
     command: node node_modules/next/dist/bin/next dev -H 0.0.0.0
