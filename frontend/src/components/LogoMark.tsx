@@ -35,7 +35,7 @@ export function LogoLockup({ compact = false }: { compact?: boolean }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 8 : 10 }}>
       <LogoMark size={sz} radius={compact ? 8 : 10} />
       <div style={{
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'Manrope, sans-serif',
         fontSize: compact ? 14 : 16,
         fontWeight: 700, letterSpacing: '-0.03em',
         color: '#111111', lineHeight: 1,

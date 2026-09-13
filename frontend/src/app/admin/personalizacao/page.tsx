@@ -269,7 +269,7 @@ export default function PersonalizacaoPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <BrandLogo size={44} radius={12} />
               <div>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>{brand.name || 'Sua marca'}</div>
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>{brand.name || 'Sua marca'}</div>
                 <div className="brand-card-hint" style={{ margin: 0 }}>Cabeçalho da conta</div>
               </div>
             </div>

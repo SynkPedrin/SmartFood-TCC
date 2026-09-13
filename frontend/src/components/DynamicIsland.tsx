@@ -92,7 +92,7 @@ function MagneticPill({
             {icon}
           </span>
           <span style={{
-            fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700,
+            fontFamily: 'Manrope, sans-serif', fontSize: 13, fontWeight: 700,
             color: isActive ? '#111111' : 'rgba(17,17,17,0.55)',
             whiteSpace: 'nowrap', position: 'relative', zIndex: 1,
             letterSpacing: '-0.01em',
@@ -256,7 +256,7 @@ export function DynamicIsland() {
               </div>
               <ActiveIcon size={14} style={{ color: '#7b2eff', flexShrink: 0 }} />
               <span style={{
-                fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 800,
+                fontFamily: 'Manrope, sans-serif', fontSize: 13, fontWeight: 800,
                 color: '#111111', letterSpacing: '-0.02em',
               }}>
                 {active.label}

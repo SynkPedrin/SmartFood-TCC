@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { API_ORIGEM } from '@/lib/imagem'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Tag, ShoppingBag, UtensilsCrossed,
@@ -76,7 +77,7 @@ export function Sidebar({ open, onClose }: Props) {
           <span className="nav-section" style={{ marginTop: 8 }}>Ferramentas</span>
 
           <a
-            href="http://localhost:8000/api/schema/swagger-ui/"
+            href={`${API_ORIGEM}/api/v1/docs/`}
             target="_blank"
             rel="noopener noreferrer"
             className="nav-item"

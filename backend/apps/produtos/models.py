@@ -4,6 +4,13 @@ from apps.categorias.models import Categoria
 
 class Produto(models.Model):
     nome = models.CharField(max_length=150)
+    slug = models.SlugField(
+        max_length=160,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Identificador estável usado pelo seed do cardápio para não duplicar itens",
+    )
     descricao = models.TextField(blank=True)
     preco = models.DecimalField(max_digits=8, decimal_places=2)
     imagem = models.ImageField(upload_to="produtos/", blank=True, null=True)

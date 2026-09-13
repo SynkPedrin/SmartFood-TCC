@@ -73,7 +73,7 @@ export default function ChefIA({ raised = false }: { raised?: boolean }) {
           background: '#fff', color: '#7b2eff',
           fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 999,
           border: '1px solid var(--border)', letterSpacing: '0.02em',
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'Manrope, sans-serif',
         }}>IA</span>
       </motion.button>
 
@@ -115,7 +115,7 @@ export default function ChefIA({ raised = false }: { raised?: boolean }) {
                   <ChefHat size={20} style={{ color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em' }}>Chef IA</div>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em' }}>Chef IA</div>
                   <div style={{ fontSize: 12, color: 'rgba(17,17,17,0.50)', fontWeight: 600 }}>Recomendações do cardápio</div>
                 </div>
                 <button
@@ -175,7 +175,7 @@ export default function ChefIA({ raised = false }: { raised?: boolean }) {
                         padding: '8px 13px', borderRadius: 999,
                         border: '2px solid rgba(123,46,255,0.30)', background: 'rgba(123,46,255,0.06)',
                         fontSize: 12.5, fontWeight: 700, color: '#7b2eff', cursor: 'pointer',
-                        fontFamily: 'Inter, sans-serif', boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
+                        fontFamily: 'Manrope, sans-serif', boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
                       }}
                     >{c}</button>
                   ))}
@@ -193,7 +193,7 @@ export default function ChefIA({ raised = false }: { raised?: boolean }) {
                   style={{
                     flex: 1, resize: 'none', overflow: 'hidden',
                     background: '#f6f6f7', border: '1px solid var(--border)', borderRadius: 12,
-                    padding: '11px 14px', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                    padding: '11px 14px', fontFamily: 'Manrope, sans-serif', fontSize: 14,
                     color: 'var(--text-primary)', outline: 'none', boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
                     minHeight: 44,
                   }}

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { categoriasApi, produtosApi, mesasApi, pedidosApi } from '@/lib/api'
+import { imagemUrl, onImagemErro } from '@/lib/imagem'
 import type { Categoria, Produto, Mesa, Pedido, PaginatedResponse } from '@/types'
 import ChefIA from '@/components/ChefIA'
 import { BrandLogo } from '@/components/BrandLogo'
@@ -37,7 +38,7 @@ function MesaSelector({ onSelect }: { onSelect: (mesa: Mesa) => void }) {
       {/* Logo */}
       <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }} style={{ textAlign: 'center', marginBottom: 'clamp(36px, 6vh, 56px)' }}>
         <BrandLogo size={132} radius={0} style={{ margin: '0 auto 14px' }} />
-        <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.75rem)', fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text-primary)', marginBottom: 8 }}>
+        <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.75rem)', fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text-primary)', marginBottom: 8 }}>
           Bem-vindo
         </h1>
         <p style={{ fontSize: '1.02rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
@@ -126,7 +127,7 @@ function CartDrawer({
         {/* Header */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <ShoppingCart size={20} style={{ color: '#7b2eff' }} />
-          <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 800, color: '#111111', flex: 1, letterSpacing: '-0.03em' }}>
+          <h2 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, fontWeight: 800, color: '#111111', flex: 1, letterSpacing: '-0.03em' }}>
             Seu Pedido
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
@@ -154,14 +155,11 @@ function CartDrawer({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 overflow: 'hidden',
               }}>
-                {ci.produto.imagem
-                  ? <img src={`http://localhost:8000${ci.produto.imagem}`} alt={ci.produto.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <UtensilsCrossed size={20} style={{ color: 'rgba(123,46,255,0.35)' }} />
-                }
+                <img src={imagemUrl(ci.produto.imagem)} onError={onImagemErro} alt={ci.produto.nome} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
 
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 4 }}>{ci.produto.nome}</div>
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 4 }}>{ci.produto.nome}</div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#00e0b8' }}>{formatPrice(Number(ci.produto.preco) * ci.qtd)}</div>
               </div>
 
@@ -169,7 +167,7 @@ function CartDrawer({
                 <button onClick={() => onQty(ci.produto.id, -1)} style={{ width: 32, height: 32, borderRadius: 9, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
                   <Minus size={12} />
                 </button>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 800, minWidth: 24, textAlign: 'center' }}>{ci.qtd}</span>
+                <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, minWidth: 24, textAlign: 'center' }}>{ci.qtd}</span>
                 <button onClick={() => onQty(ci.produto.id, 1)} style={{ width: 32, height: 32, borderRadius: 9, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
                   <Plus size={12} />
                 </button>
@@ -186,7 +184,7 @@ function CartDrawer({
           <div style={{ padding: '16px 20px 24px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(17,17,17,0.60)' }}>Total</span>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-0.04em' }}>
+              <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-0.04em' }}>
                 {formatPrice(total)}
               </span>
             </div>
@@ -197,7 +195,7 @@ function CartDrawer({
                 background: 'linear-gradient(135deg, #7b2eff, #00e0b8)',
                 border: '1px solid var(--border)',
                 borderRadius: 14, color: '#fff',
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Manrope, sans-serif',
                 fontSize: 16, fontWeight: 800,
                 cursor: 'pointer', letterSpacing: '-0.02em',
                 boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
@@ -247,7 +245,7 @@ function MenuScreen({
         <BrandLogo size={36} radius={10} />
 
         <div>
-          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em' }}>
+          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em' }}>
             {brand.name}
           </div>
           <div style={{ fontSize: 12, color: 'rgba(17,17,17,0.50)', fontWeight: 600 }}>Cardápio</div>
@@ -322,11 +320,7 @@ function MenuScreen({
                 >
                   {/* Image area */}
                   <div className="totem-img">
-                    {prod.imagem ? (
-                      <img src={`http://localhost:8000${prod.imagem}`} alt={prod.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <UtensilsCrossed size={40} style={{ color: 'rgba(123,46,255,0.25)' }} />
-                    )}
+                    <img src={imagemUrl(prod.imagem)} onError={onImagemErro} alt={prod.nome} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
 
                   {/* Info */}
@@ -336,7 +330,7 @@ function MenuScreen({
                         {prod.categoria_detalhe.nome}
                       </span>
                     )}
-                    <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', margin: '4px 0 6px' }}>
+                    <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', margin: '4px 0 6px' }}>
                       {prod.nome}
                     </h3>
                     {prod.descricao && (
@@ -346,7 +340,7 @@ function MenuScreen({
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 900, color: '#00e0b8', letterSpacing: '-0.04em' }}>
+                      <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 900, color: '#00e0b8', letterSpacing: '-0.04em' }}>
                         {formatPrice(prod.preco)}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'rgba(17,17,17,0.42)', fontWeight: 600, marginLeft: 'auto' }}>
@@ -369,7 +363,7 @@ function MenuScreen({
                           background: 'linear-gradient(135deg, #7b2eff, #00e0b8)',
                           border: '1px solid var(--border)',
                           borderRadius: 12, color: '#fff',
-                          fontFamily: 'Inter, sans-serif',
+                          fontFamily: 'Manrope, sans-serif',
                           fontSize: 14, fontWeight: 800,
                           cursor: 'pointer', letterSpacing: '-0.01em',
                           boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
@@ -416,7 +410,7 @@ function MenuScreen({
             </div>
             <div>
               <div style={{ fontSize: 12, color: 'rgba(17,17,17,0.55)', fontWeight: 600 }}>{cartCount} item{cartCount > 1 ? 's' : ''}</div>
-              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 900, color: '#111111', letterSpacing: '-0.03em' }}>
+              <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 17, fontWeight: 900, color: '#111111', letterSpacing: '-0.03em' }}>
                 {formatPrice(cartTotal)}
               </div>
             </div>
@@ -428,7 +422,7 @@ function MenuScreen({
               background: 'linear-gradient(135deg, #7b2eff, #00e0b8)',
               border: '1px solid var(--border)',
               borderRadius: 14, color: '#fff',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'Manrope, sans-serif',
               fontSize: 15, fontWeight: 800,
               cursor: 'pointer', letterSpacing: '-0.01em',
               boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
@@ -469,7 +463,7 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-        <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111111', marginBottom: 8 }}>
+        <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111111', marginBottom: 8 }}>
           Pedido enviado!
         </h1>
         <p style={{ fontSize: '1rem', color: 'rgba(17,17,17,0.55)', fontWeight: 500, marginBottom: 6 }}>
@@ -491,7 +485,7 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
           width: '100%', maxWidth: 380, marginBottom: 28, textAlign: 'left',
         }}
       >
-        <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 700, color: 'rgba(17,17,17,0.55)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 14, fontWeight: 700, color: 'rgba(17,17,17,0.55)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           Resumo do pedido
         </h3>
         {cart.map(ci => (
@@ -501,8 +495,8 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
           </div>
         ))}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 900, color: '#111111' }}>Total</span>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 900, color: '#111111' }}>{formatPrice(total)}</span>
+          <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 900, color: '#111111' }}>Total</span>
+          <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 900, color: '#111111' }}>{formatPrice(total)}</span>
         </div>
       </motion.div>
 
@@ -524,7 +518,7 @@ function SuccessScreen({ mesa, cart, orderNum, onReset }: { mesa: Mesa; cart: Ca
           marginTop: 32, padding: '14px 32px',
           background: '#fff', border: '1px solid var(--border)',
           borderRadius: 14, color: 'rgba(17,17,17,0.65)',
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'Manrope, sans-serif',
           fontSize: 14, fontWeight: 700,
           cursor: 'pointer', boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
         }}

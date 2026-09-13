@@ -85,7 +85,7 @@ export default function MesasPage() {
             }}>
               <span className={`dot ${s.dotCls}`} />
               <span style={{ color: 'rgba(17,17,17,0.62)', fontWeight: 600 }}>{s.label}</span>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 17, color: '#111111' }}>{s.count}</span>
+              <span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 17, color: '#111111' }}>{s.count}</span>
             </div>
           ))}
         </motion.div>
@@ -111,7 +111,7 @@ export default function MesasPage() {
               const cfg = STATUS_CFG[mesa.status]
               return (
                 <motion.div key={mesa.id} variants={cardAnim} exit="exit" layout className={`mesa-card ${cfg.cls}`}>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 34, fontWeight: 900, letterSpacing: '-0.04em', color: '#111111', lineHeight: 1 }}>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 34, fontWeight: 900, letterSpacing: '-0.04em', color: '#111111', lineHeight: 1 }}>
                     {mesa.numero}
                   </div>
                   <div style={{ color: cfg.color, opacity: 0.85 }}>{cfg.icon}</div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { API_ORIGEM } from "@/lib/imagem";
 
 const links = [
   { href: "/categorias", label: "Categorias" },
@@ -34,7 +35,7 @@ export function NavLinks() {
         );
       })}
       <a
-        href="http://localhost:8000/api/v1/docs/"
+        href={`${API_ORIGEM}/api/v1/docs/`}
         target="_blank"
         rel="noopener noreferrer"
         style={{ fontSize: "14px", fontWeight: 500, color: "#555", textDecoration: "none" }}

@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
 // Categorias
 export const categoriasApi = {
-  listar: () => api.get("/categorias/").then((r) => r.data),
+  listar: () => api.get("/categorias/", { params: { page_size: 500 } }).then((r) => r.data),
   criar: (data: unknown) => api.post("/categorias/", data).then((r) => r.data),
   atualizar: (id: number, data: unknown) => api.patch(`/categorias/${id}/`, data).then((r) => r.data),
   excluir: (id: number) => api.delete(`/categorias/${id}/`),
@@ -48,7 +48,7 @@ export const categoriasApi = {
 
 // Produtos
 export const produtosApi = {
-  listar: () => api.get("/produtos/").then((r) => r.data),
+  listar: () => api.get("/produtos/", { params: { page_size: 500 } }).then((r) => r.data),
   criar: (data: unknown) => api.post("/produtos/", data).then((r) => r.data),
   atualizar: (id: number, data: unknown) => api.patch(`/produtos/${id}/`, data).then((r) => r.data),
   excluir: (id: number) => api.delete(`/produtos/${id}/`),
@@ -56,7 +56,7 @@ export const produtosApi = {
 
 // Mesas
 export const mesasApi = {
-  listar: () => api.get("/mesas/").then((r) => r.data),
+  listar: () => api.get("/mesas/", { params: { page_size: 500 } }).then((r) => r.data),
   criar: (data: unknown) => api.post("/mesas/", data).then((r) => r.data),
   atualizar: (id: number, data: unknown) => api.patch(`/mesas/${id}/`, data).then((r) => r.data),
   excluir: (id: number) => api.delete(`/mesas/${id}/`),

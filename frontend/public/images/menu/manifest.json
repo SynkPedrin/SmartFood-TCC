@@ -1,0 +1,272 @@
+{
+  "cafe-espresso": {
+    "name": "Café Espresso",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/cafe-espresso.webp"
+  },
+  "guarana": {
+    "name": "Guaraná",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/guarana.webp"
+  },
+  "limonada": {
+    "name": "Limonada",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/limonada.webp"
+  },
+  "refrigerante-cola": {
+    "name": "Refrigerante Cola",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/refrigerante-cola.webp"
+  },
+  "suco-laranja": {
+    "name": "Suco de Laranja",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/suco-laranja.webp"
+  },
+  "suco-morango": {
+    "name": "Suco de Morango",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/suco-morango.webp"
+  },
+  "agua-mineral": {
+    "name": "Água Mineral",
+    "category": "Bebidas",
+    "image": "/images/menu/bebidas/agua-mineral.webp"
+  },
+  "bacon-burger": {
+    "name": "Bacon Burger",
+    "category": "Burgers",
+    "image": "/images/menu/burgers/bacon-burger.webp"
+  },
+  "burger-vegetariano": {
+    "name": "Burger Vegetariano",
+    "category": "Burgers",
+    "image": null
+  },
+  "burger-frango": {
+    "name": "Burger de Frango",
+    "category": "Burgers",
+    "image": null
+  },
+  "duplo-cheddar": {
+    "name": "Duplo Cheddar",
+    "category": "Burgers",
+    "image": "/images/menu/burgers/duplo-cheddar.webp"
+  },
+  "smash-burger": {
+    "name": "Smash Burger",
+    "category": "Burgers",
+    "image": null
+  },
+  "x-burger": {
+    "name": "X-Burger",
+    "category": "Burgers",
+    "image": "/images/menu/burgers/x-burger.webp"
+  },
+  "x-salada": {
+    "name": "X-Salada",
+    "category": "Burgers",
+    "image": "/images/menu/burgers/x-salada.webp"
+  },
+  "combo-burger": {
+    "name": "Combo Burger",
+    "category": "Combos",
+    "image": "/images/menu/combos/combo-burger.webp"
+  },
+  "combo-executivo": {
+    "name": "Combo Executivo",
+    "category": "Combos",
+    "image": "/images/menu/combos/combo-executivo.webp"
+  },
+  "combo-pizza": {
+    "name": "Combo Pizza",
+    "category": "Combos",
+    "image": "/images/menu/combos/combo-pizza.webp"
+  },
+  "batata-frita": {
+    "name": "Batata Frita",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/batata-frita.webp"
+  },
+  "batata-cheddar-bacon": {
+    "name": "Batata com Cheddar e Bacon",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/batata-cheddar-bacon.webp"
+  },
+  "bruschetta": {
+    "name": "Bruschetta",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/bruschetta.webp"
+  },
+  "dadinho-de-tapioca": {
+    "name": "Dadinho de Tapioca",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/dadinho-de-tapioca.webp"
+  },
+  "iscas-de-frango": {
+    "name": "Iscas de Frango",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/iscas-de-frango.webp"
+  },
+  "onion-rings": {
+    "name": "Onion Rings",
+    "category": "Entradas",
+    "image": "/images/menu/entradas/onion-rings.webp"
+  },
+  "frango-empanado-fritas": {
+    "name": "Frango Empanado com Fritas",
+    "category": "Infantil",
+    "image": "/images/menu/infantil/frango-empanado-fritas.webp"
+  },
+  "mini-burger-fritas": {
+    "name": "Mini Burger com Fritas",
+    "category": "Infantil",
+    "image": "/images/menu/infantil/mini-burger-fritas.webp"
+  },
+  "mini-macarrao": {
+    "name": "Mini Macarrão",
+    "category": "Infantil",
+    "image": "/images/menu/infantil/mini-macarrao.webp"
+  },
+  "espaguete-bolonhesa": {
+    "name": "Espaguete à Bolonhesa",
+    "category": "Massas",
+    "image": null
+  },
+  "fettuccine-alfredo": {
+    "name": "Fettuccine Alfredo",
+    "category": "Massas",
+    "image": null
+  },
+  "lasanha-bolonhesa": {
+    "name": "Lasanha à Bolonhesa",
+    "category": "Massas",
+    "image": null
+  },
+  "nhoque-molho-tomate": {
+    "name": "Nhoque ao Molho de Tomate",
+    "category": "Massas",
+    "image": null
+  },
+  "penne-molho-tomate": {
+    "name": "Penne ao Molho de Tomate",
+    "category": "Massas",
+    "image": null
+  },
+  "pizza-calabresa": {
+    "name": "Pizza Calabresa",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-frango-catupiry": {
+    "name": "Pizza Frango com Catupiry",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-margherita": {
+    "name": "Pizza Margherita",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-pepperoni": {
+    "name": "Pizza Pepperoni",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-portuguesa": {
+    "name": "Pizza Portuguesa",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-quatro-queijos": {
+    "name": "Pizza Quatro Queijos",
+    "category": "Pizzas",
+    "image": null
+  },
+  "pizza-chocolate": {
+    "name": "Pizza de Chocolate",
+    "category": "Pizzas",
+    "image": null
+  },
+  "contra-file-fritas": {
+    "name": "Contra-Filé com Fritas",
+    "category": "Pratos",
+    "image": null
+  },
+  "feijoada": {
+    "name": "Feijoada",
+    "category": "Pratos",
+    "image": null
+  },
+  "file-grelhado": {
+    "name": "Filé Grelhado",
+    "category": "Pratos",
+    "image": null
+  },
+  "file-parmegiana": {
+    "name": "Filé à Parmegiana",
+    "category": "Pratos",
+    "image": null
+  },
+  "frango-grelhado": {
+    "name": "Frango Grelhado",
+    "category": "Pratos",
+    "image": null
+  },
+  "peixe-grelhado": {
+    "name": "Peixe Grelhado",
+    "category": "Pratos",
+    "image": null
+  },
+  "strogonoff-frango": {
+    "name": "Strogonoff de Frango",
+    "category": "Pratos",
+    "image": null
+  },
+  "bowl-frango": {
+    "name": "Bowl de Frango",
+    "category": "Saladas",
+    "image": null
+  },
+  "salada-caesar": {
+    "name": "Salada Caesar",
+    "category": "Saladas",
+    "image": null
+  },
+  "salada-tropical": {
+    "name": "Salada Tropical",
+    "category": "Saladas",
+    "image": null
+  },
+  "brownie-sorvete": {
+    "name": "Brownie com Sorvete",
+    "category": "Sobremesas",
+    "image": null
+  },
+  "cheesecake-frutas-vermelhas": {
+    "name": "Cheesecake de Frutas Vermelhas",
+    "category": "Sobremesas",
+    "image": null
+  },
+  "mousse-chocolate": {
+    "name": "Mousse de Chocolate",
+    "category": "Sobremesas",
+    "image": null
+  },
+  "petit-gateau": {
+    "name": "Petit Gâteau",
+    "category": "Sobremesas",
+    "image": null
+  },
+  "pudim": {
+    "name": "Pudim",
+    "category": "Sobremesas",
+    "image": null
+  },
+  "sorvete": {
+    "name": "Sorvete",
+    "category": "Sobremesas",
+    "image": "/images/menu/sobremesas/sorvete.webp"
+  }
+}

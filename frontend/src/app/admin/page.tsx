@@ -69,7 +69,7 @@ export default function AdminDashboard() {
         style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 40 }}
       >
         <div>
-          <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text-primary)', lineHeight: 1.05 }}>
+          <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text-primary)', lineHeight: 1.05 }}>
             {saudacao}
           </h1>
           <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginTop: 6 }}>

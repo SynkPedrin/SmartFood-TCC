@@ -28,7 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               color: '#ffffff',
               border: '1px solid var(--border)',
               borderRadius: '12px',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'Manrope', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
               boxShadow: '0 6px 16px rgba(0,0,0,0.06)',

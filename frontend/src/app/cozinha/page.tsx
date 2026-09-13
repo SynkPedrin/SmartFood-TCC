@@ -116,7 +116,7 @@ function Cozinha() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ChefHat size={18} style={{ color: 'var(--terracotta)' }} />
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+          <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
             Cozinha {brand.name}
           </span>
         </div>
@@ -197,7 +197,7 @@ function Cozinha() {
                     boxShadow: col.shadow,
                   }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 800, color: col.color, letterSpacing: '-0.01em' }}>
+                    <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 13, fontWeight: 800, color: col.color, letterSpacing: '-0.01em' }}>
                       {col.label}
                     </span>
                     <span style={{
@@ -240,7 +240,7 @@ function Cozinha() {
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div style={{
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Manrope, sans-serif',
                               fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em',
                               color: 'var(--text-primary)', lineHeight: 1,
                             }}>
@@ -298,7 +298,7 @@ function Cozinha() {
                               )}
                             </span>
                             <span style={{
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Manrope, sans-serif',
                               fontWeight: 800, color: col.color,
                               minWidth: 24, textAlign: 'right',
                             }}>×{item.quantidade}</span>
@@ -317,7 +317,7 @@ function Cozinha() {
                             background: col.bg,
                             color: col.color, fontSize: 13, fontWeight: 800,
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                            fontFamily: 'Inter, sans-serif',
+                            fontFamily: 'Manrope, sans-serif',
                             boxShadow: col.shadow,
                             transition: 'all 0.16s ease',
                           }}

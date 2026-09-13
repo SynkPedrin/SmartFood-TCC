@@ -7,7 +7,6 @@ import {
   ClipboardList, Bot, Home, ChefHat, Palette, LogOut,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import { useBrand } from '@/lib/brand/BrandContext'
 import { useAuth } from '@/lib/auth/AuthContext'
 
 const NAV_SECTIONS = [
@@ -51,7 +50,6 @@ const FOOTER_LINKS = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const { brand } = useBrand()
   const { usuario, sair } = useAuth()
   const router = useRouter()
 
@@ -64,21 +62,12 @@ export function AdminSidebar() {
     <aside className="admin-sidebar-wrap">
       {/* Logo */}
       <div style={{
-        padding: '22px 14px 18px',
+        padding: '26px 14px 22px',
         borderBottom: '1px solid var(--border)',
         flexShrink: 0,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-      }}>
-        <BrandLogo size={80} radius={16} />
-        <div className="sidebar-logo-text" style={{
-          fontFamily: 'Inter, sans-serif',
-          fontSize: 18, fontWeight: 700,
-          color: 'var(--text-primary)',
-          letterSpacing: '-0.03em',
-          textAlign: 'center',
-        }}>
-          {brand.name}
-        </div>
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }} className="sidebar-logo-wrap">
+        <BrandLogo size={140} radius={20} />
       </div>
 
       {/* Navigation */}

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { categoriasApi, produtosApi } from '@/lib/api'
+import { imagemUrl, onImagemErro } from '@/lib/imagem'
 import type { Categoria, Produto, PaginatedResponse } from '@/types'
 import { Modal } from '@/components/Modal'
 import {
@@ -117,7 +118,7 @@ function CategoriasTab() {
                       <button onClick={() => { if (!confirm(`Excluir "${cat.nome}"?`)) return; excluir.mutate(cat.id) }} className="btn btn-danger btn-icon btn-sm"><Trash2 size={13} /></button>
                     </div>
                   </div>
-                  <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', marginBottom: 6 }}>{cat.nome}</h3>
+                  <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 17, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', marginBottom: 6 }}>{cat.nome}</h3>
                   <p style={{ fontSize: 13, color: 'rgba(17,17,17,0.60)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {cat.descricao || <span style={{ color: 'rgba(17,17,17,0.35)', fontStyle: 'italic' }}>Sem descrição</span>}
                   </p>
@@ -213,7 +214,11 @@ function ProdutosTab() {
           style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
           <AnimatePresence mode="popLayout">
             {produtos.map(prod => (
-              <motion.div key={prod.id} variants={cardAnim} exit="exit" layout className="glass" style={{ padding: 22, display: 'flex', flexDirection: 'column' }}>
+              <motion.div key={prod.id} variants={cardAnim} exit="exit" layout className="glass" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: 140, flexShrink: 0, background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--border)' }}>
+                  <img src={imagemUrl(prod.imagem)} onError={onImagemErro} alt={prod.nome} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </div>
+                <div style={{ padding: 22, display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {prod.categoria_detalhe && <span className="badge badge-purple" style={{ fontSize: 10 }}><Tag size={9} />{prod.categoria_detalhe.nome}</span>}
@@ -226,15 +231,16 @@ function ProdutosTab() {
                     <button onClick={() => { if (!confirm(`Excluir "${prod.nome}"?`)) return; excluir.mutate(prod.id) }} className="btn btn-danger btn-icon btn-sm"><Trash2 size={12} /></button>
                   </div>
                 </div>
-                <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', marginBottom: 6 }}>{prod.nome}</h3>
+                <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', marginBottom: 6 }}>{prod.nome}</h3>
                 {prod.descricao && <p style={{ fontSize: 12, color: 'rgba(17,17,17,0.58)', lineHeight: 1.6, marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prod.descricao}</p>}
                 <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 900, color: '#00e0b8', letterSpacing: '-0.04em' }}>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 900, color: '#00e0b8', letterSpacing: '-0.04em' }}>
                     R$ {Number(prod.preco).toFixed(2)}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'rgba(17,17,17,0.45)' }}>
                     <Clock size={12} />{prod.tempo_preparo} min
                   </div>
+                </div>
                 </div>
               </motion.div>
             ))}
@@ -298,7 +304,7 @@ export default function CardapioPage() {
       {/* Section header + segmented control */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text-primary)' }}>Cardápio</h1>
+          <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text-primary)' }}>Cardápio</h1>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: 4 }}>Gerencie categorias e produtos do menu.</p>
         </div>
         <div className="segmented" role="tablist">

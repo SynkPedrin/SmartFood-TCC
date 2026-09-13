@@ -90,7 +90,7 @@ export default function Home() {
 
           <h1
             style={{
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'Manrope, sans-serif',
               fontSize: 'clamp(2.6rem, 6vw, 4.1rem)',
               fontWeight: 700,
               lineHeight: 0.98,
@@ -171,7 +171,7 @@ export default function Home() {
                     <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                       <span
                         style={{
-                          fontFamily: 'Inter, sans-serif',
+                          fontFamily: 'Manrope, sans-serif',
                           fontSize: '1.35rem', fontWeight: 700,
                           letterSpacing: '-0.03em', color: 'var(--text-primary)',
                         }}

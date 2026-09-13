@@ -62,7 +62,7 @@ DRF is configured with `drf-spectacular` (OpenAPI), `django-filter`, pagination 
 
 **Realtime**: `apps/pedidos/consumers.py` serves `ws/cozinha/`, authenticated by the same token via query string. A `post_save` signal sends a short notice (id, status, novo) and the client refetches from the API, so the DB stays the single source of truth. `CHANNEL_LAYERS` picks Redis only if the host actually resolves, else falls back to in-memory - the compose `REDIS_URL` points at host `redis`, which does not exist outside Docker.
 
-Local dev without Docker: `DATABASE_URL="sqlite:///db.sqlite3"` and Python 3.9 + Django 4.2 in `backend/.venv-local`. Run `python manage.py seed_demo` to populate; it also creates user `admin`.
+Local dev without Docker: `DATABASE_URL="sqlite:///db.sqlite3"` and Python 3.9 + Django 4.2 in `backend/.venv-local`. Run `python manage.py seed_demo` to populate; it also creates user `admin`. For the full 54-item menu run `python manage.py seed_menu` (idempotent by `Produto.slug`); photos live in `frontend/public/images/menu/<categoria>/<slug>.webp` and the command copies them into `backend/media/produtos/` for the API to serve.
 
 Config is 12-factor via `python-decouple`. `DATABASE_URL` takes priority over individual `DB_*` vars when present and valid.
 

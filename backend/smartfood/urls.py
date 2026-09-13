@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 from .auth_views import EuView, LoginView, LogoutView
@@ -28,4 +28,9 @@ urlpatterns = [
     path("api/v1/", include("apps.produtos.urls")),
     path("api/v1/", include("apps.mesas.urls")),
     path("api/v1/", include("apps.pedidos.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Fotos dos produtos em qualquer modo: a rota "static()" padrão só existe com
+    # DEBUG=True, e sem foto o cardápio quebra em produção. Serve direto do Django,
+    # suficiente para o volume deste projeto (numa operação grande, usar CDN/nginx).
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]
