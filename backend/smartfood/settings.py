@@ -177,7 +177,12 @@ CORS_ALLOWED_ORIGINS = [
     origem.strip()
     for origem in config(
         "CORS_ORIGINS",
-        default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
+        default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:8080,http://127.0.0.1:8080",
     ).split(",")
     if origem.strip()
 ]
+
+# Permite que o site público (Vercel, HTTPS) fale com o backend local (127.0.0.1)
+# durante a fase de testes: o Chrome exige este header no preflight de Private
+# Network Access. Sem efeito quando a origem não é rede privada.
+CORS_ALLOW_PRIVATE_NETWORK = True
