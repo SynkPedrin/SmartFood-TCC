@@ -52,9 +52,9 @@ export interface RestaurantSnapshot {
 /** Coleta um retrato atual do restaurante a partir do backend. */
 export async function loadSnapshot(): Promise<RestaurantSnapshot> {
   const [cat, prod, mesa] = await Promise.all([
-    getJSON<Paginated<Categoria>>('/categorias/'),
-    getJSON<Paginated<Produto>>('/produtos/'),
-    getJSON<Paginated<Mesa>>('/mesas/'),
+    getJSON<Paginated<Categoria>>('/categorias/?page_size=500'),
+    getJSON<Paginated<Produto>>('/produtos/?page_size=500'),
+    getJSON<Paginated<Mesa>>('/mesas/?page_size=500'),
   ])
 
   const online = cat !== null || prod !== null || mesa !== null
