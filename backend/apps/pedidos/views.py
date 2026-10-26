@@ -1,5 +1,8 @@
 import django_filters
 from django.db.models import Prefetch
+from django.db import transaction, IntegrityError
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAdminUser
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status as http, viewsets
 from rest_framework.decorators import action
@@ -54,6 +57,39 @@ class PedidoViewSet(viewsets.ModelViewSet):
     filterset_class = PedidoFilter
     search_fields = ["mesa__numero", "itens__produto__nome"]
     ordering_fields = ["criado_em", "status"]
+
+    def create(self, request, *args, **kwargs):
+        # UUID por tentativa: repetição de rede devolve o pedido já gravado.
+        import uuid
+        chave = request.data.get("chave_idempotencia")
+        if chave:
+            try:
+                chave = uuid.UUID(str(chave))
+            except (ValueError, TypeError):
+                raise ValidationError({"chave_idempotencia": "Use um UUID válido."})
+            existente = self.queryset.filter(chave_idempotencia=chave).first()
+            if existente:
+                return self._repeticao(existente, request)
+        try:
+            with transaction.atomic():
+                return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            if not chave:
+                raise
+            existente = self.queryset.filter(chave_idempotencia=chave).first()
+            if not existente:
+                raise
+            return self._repeticao(existente, request)
+
+    def _repeticao(self, pedido, request):
+        if str(pedido.mesa_id) != str(request.data.get("mesa")):
+            raise ValidationError({"chave_idempotencia": "Chave já utilizada."})
+        # Não publica itens nem observações na repetição pública.
+        return Response({"id": pedido.pk, "acompanhamento": str(pedido.acompanhamento), "status": pedido.status}, status=200)
+
+    def destroy(self, request, *args, **kwargs):
+        # Histórico operacional é preservado; cancelamento segue a máquina de estados.
+        raise ValidationError({"detail": "Pedidos não são excluídos. Cancele antes de ficarem prontos."})
 
     @extend_schema(
         summary="Mudar o status do pedido",

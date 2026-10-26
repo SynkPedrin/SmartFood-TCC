@@ -16,7 +16,7 @@ interface Particula {
 export default function ParticleBall({ size = 44, thinking = false }: { size?: number; thinking?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const thinkingRef = useRef(thinking)
-  thinkingRef.current = thinking
+  useEffect(() => { thinkingRef.current = thinking }, [thinking])
 
   useEffect(() => {
     const canvas = ref.current

@@ -8,6 +8,7 @@ from .models import ItemPedido, Pedido
 
 
 class ItemPedidoSerializer(serializers.ModelSerializer):
+    quantidade = serializers.IntegerField(min_value=1, max_value=99, default=1)
     produto_nome = serializers.CharField(source="produto.nome", read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
@@ -33,21 +34,35 @@ class PedidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pedido
         fields = (
-            "id", "mesa", "mesa_numero",
+            "id", "mesa", "mesa_numero", "acompanhamento", "chave_idempotencia",
             "status", "status_display",
             "itens", "total", "quantidade_itens", "tempo_preparo_estimado",
             "observacao", "criado_em", "atualizado_em",
         )
-        read_only_fields = ("criado_em", "atualizado_em")
+        read_only_fields = ("criado_em", "atualizado_em", "acompanhamento")
 
     def validate_itens(self, itens):
         if not itens:
             raise serializers.ValidationError("O pedido precisa de pelo menos um item.")
+        if len(itens) > 50:
+            raise serializers.ValidationError("Limite de 50 itens por pedido.")
         return itens
+
+    def validate(self, attrs):
+        if self.instance:
+            if "mesa" in attrs and attrs["mesa"].pk != self.instance.mesa_id:
+                raise serializers.ValidationError({"mesa": "A mesa de um pedido não pode ser alterada."})
+            if "itens" in attrs:
+                raise serializers.ValidationError({"itens": "Cancele e refaça o pedido para mudar seus itens."})
+        elif attrs.get("mesa") and attrs["mesa"].status in (Mesa.Status.RESERVADA, Mesa.Status.MANUTENCAO):
+            raise serializers.ValidationError({"mesa": "Esta mesa não está disponível para pedidos."})
+        return attrs
 
     def validate_status(self, novo_status):
         """Na atualização, respeita o fluxo do pedido em vez de aceitar qualquer salto."""
         pedido = self.instance
+        if pedido is None and novo_status != Pedido.Status.RECEBIDO:
+            raise serializers.ValidationError("Todo pedido deve começar como recebido.")
         if pedido is None or novo_status == pedido.status:
             return novo_status
         if not pedido.pode_ir_para(novo_status):
@@ -60,6 +75,15 @@ class PedidoSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         itens = validated_data.pop("itens")
+        mesa = Mesa.objects.select_for_update().get(pk=validated_data["mesa"].pk)
+        if mesa.status in (Mesa.Status.RESERVADA, Mesa.Status.MANUTENCAO):
+            raise serializers.ValidationError({"mesa": "Esta mesa não está disponível para pedidos."})
+        produtos = {p.pk: p for p in Produto.objects.select_for_update().filter(pk__in=[i["produto"].pk for i in itens])}
+        for item in itens:
+            produto = produtos[item["produto"].pk]
+            if not produto.disponivel:
+                raise serializers.ValidationError({"itens": f'Produto "{produto.nome}" indisponível.'})
+            item["produto"] = produto
         pedido = Pedido.objects.create(**validated_data)
 
         for item in itens:
@@ -82,6 +106,10 @@ class PedidoSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        Mesa.objects.select_for_update().get(pk=instance.mesa_id)
+        instance = Pedido.objects.select_for_update().get(pk=instance.pk)
+        if "status" in validated_data and validated_data["status"] != instance.status and not instance.pode_ir_para(validated_data["status"]):
+            raise serializers.ValidationError({"status": "O pedido já mudou de etapa. Atualize a fila."})
         # Itens não são editados por aqui: mudar o que já foi para a cozinha
         # exige cancelar e refazer, que é como a operação funciona na prática.
         validated_data.pop("itens", None)

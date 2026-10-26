@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { BrandConfig, DEFAULT_BRAND, STORAGE_KEY } from './types'
 import { shade, isHex } from './color'
+import { api } from '@/lib/api'
 
 interface BrandContextValue {
   brand: BrandConfig
@@ -10,6 +11,7 @@ interface BrandContextValue {
   ready: boolean
   update: (patch: Partial<BrandConfig>) => void
   reset: () => void
+  save: () => Promise<void>
 }
 
 const BrandContext = createContext<BrandContextValue | null>(null)
@@ -37,16 +39,17 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   // Hidrata do localStorage no cliente.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<BrandConfig>
-        setBrand({ ...DEFAULT_BRAND, ...parsed })
+    let vivo = true
+    Promise.resolve().then(async () => {
+      try {
+        const {data} = await api.get<Partial<BrandConfig>>('/restaurante/')
+        return { ...DEFAULT_BRAND, ...data }
+      } catch {
+        try { return { ...DEFAULT_BRAND, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } } catch { return DEFAULT_BRAND }
       }
-    } catch {
-      /* ignora config corrompida */
-    }
-    setReady(true)
+    }).then(data => { if (vivo) { setBrand(data); setReady(true) } })
+    return () => { vivo = false }
+
   }, [])
 
   // Aplica acento sempre que mudar.
@@ -64,10 +67,17 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(() => {
     try { localStorage.removeItem(STORAGE_KEY) } catch { /* noop */ }
-    setBrand(DEFAULT_BRAND)
+    setBrand(prev => ({ ...DEFAULT_BRAND, accountId: prev.accountId }))
   }, [])
 
-  const value = useMemo(() => ({ brand, ready, update, reset }), [brand, ready, update, reset])
+  const save = useCallback(async () => {
+    const {data} = await api.patch<BrandConfig>('/restaurante/', brand)
+    const {data: confirmado} = await api.get<BrandConfig>('/restaurante/')
+    if (confirmado.name !== data.name || confirmado.accent !== data.accent) throw new Error('Não foi possível confirmar a configuração salva.')
+    setBrand({ ...DEFAULT_BRAND, ...confirmado })
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(confirmado))
+  }, [brand])
+  const value = useMemo(() => ({ brand, ready, update, reset, save }), [brand, ready, update, reset, save])
 
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>
 }

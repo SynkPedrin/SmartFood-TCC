@@ -28,10 +28,11 @@ const BACKGROUNDS: { id: BackgroundStyle; label: string; hint: string }[] = [
 ]
 
 export default function PersonalizacaoPage() {
-  const { brand, update, reset } = useBrand()
+  const { brand, update, reset, save } = useBrand()
   const logoInput = useRef<HTMLInputElement>(null)
   const bgInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [salvando, setSalvando] = useState(false)
   const { contas, disponivel, carregando } = useContasCerebro()
   const contaAtiva = contas.find(c => c.slug === brand.accountId)
 
@@ -83,11 +84,15 @@ export default function PersonalizacaoPage() {
           </div>
           <p className="page-sub">Identidade white-label da conta: logo, plano de fundo e cor</p>
         </div>
-        <button onClick={() => { reset(); toast.success('Restaurado ao padrão') }} className="btn btn-ghost btn-sm" style={{ gap: 7 }}>
+        <button onClick={() => { reset(); toast.success('Prévia restaurada. Salve para aplicar ao restaurante.') }} className="btn btn-ghost btn-sm" style={{ gap: 7 }}>
           <RotateCcw size={13} /> Restaurar padrão
         </button>
       </motion.div>
 
+      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24,flexWrap:'wrap'}}>
+        <button className="btn btn-primary" disabled={salvando || busy} onClick={async () => { setSalvando(true); try { await save(); toast.success('Identidade salva e confirmada no restaurante.') } catch { toast.error('Não foi possível salvar. Verifique a conexão e seu acesso de administrador.') } finally { setSalvando(false) } }}>{salvando ? 'Salvando…' : 'Salvar identidade'}</button>
+        <p style={{fontSize:12,color:'var(--text-secondary)'}}>As alterações abaixo são uma prévia. Salve para aplicar em todos os dispositivos.</p>
+      </div>
       <div className="brand-grid">
         {/* ── Controls ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -97,16 +102,15 @@ export default function PersonalizacaoPage() {
               <Brain size={15} style={{ color: 'var(--terracotta)' }} /> Conta ativa
             </h2>
             <p className="brand-card-hint">
-              Cada conta tem um cérebro próprio no vault (<code>cerebro/Contas/&lt;slug&gt;/</code>).
-              Trocar aqui troca a marca e a memória que a IA usa para responder.
+              Esta instalação atende o restaurante configurado no servidor. A memória da equipe é salva no banco.
+              A conta autorizada é definida no backend.
             </p>
 
             {carregando ? (
-              <p className="brand-card-hint" style={{ marginTop: 12 }}>Lendo o vault…</p>
+              <p className="brand-card-hint" style={{ marginTop: 12 }}>Consultando restaurante…</p>
             ) : !disponivel ? (
               <p className="brand-card-hint" style={{ marginTop: 12 }}>
-                Vault do cérebro não encontrado. Defina <code>CEREBRO_DIR</code> apontando para a
-                pasta <code>cerebro/</code> do projeto.
+                Não foi possível consultar o restaurante. Verifique a conexão e atualize a página.
               </p>
             ) : (
               <>

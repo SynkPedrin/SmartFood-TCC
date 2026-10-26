@@ -36,9 +36,9 @@ function useTimer() {
   // e a diferença quebrava a hidratação do React.
   const [time, setTime] = useState('')
   useEffect(() => {
-    setTime(agora())
+    const primeiro = setTimeout(() => setTime(agora()), 0)
     const id = setInterval(() => setTime(agora()), 1000)
-    return () => clearInterval(id)
+    return () => { clearTimeout(primeiro); clearInterval(id) }
   }, [])
   return time
 }

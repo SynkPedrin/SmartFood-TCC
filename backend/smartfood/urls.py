@@ -5,9 +5,16 @@ from django.views.generic import RedirectView
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-from .auth_views import EuView, LoginView, LogoutView
+from .auth_views import EuView, LoginView, LogoutView, WebsocketTicketView
+from apps.restaurante.views import AcessoIAView, MemoriasView, ConfiguracaoView, IndicadoresView, AcompanhamentoView, HealthView
 
 urlpatterns = [
+    path("api/v1/health/", HealthView.as_view()),
+    path("api/v1/restaurante/", ConfiguracaoView.as_view()),
+    path("api/v1/indicadores/", IndicadoresView.as_view()),
+    path("api/v1/ia/acesso/", AcessoIAView.as_view()),
+    path("api/v1/ia/memorias/", MemoriasView.as_view()),
+    path("api/v1/acompanhamento/<uuid:codigo>/", AcompanhamentoView.as_view()),
     # Raiz → documentação (evita 404 ao abrir a URL base)
     path("", RedirectView.as_view(url="/api/v1/docs/", permanent=False)),
 
@@ -17,6 +24,8 @@ urlpatterns = [
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/v1/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+
+    path("api/v1/auth/ws-ticket/", WebsocketTicketView.as_view()),
 
     # Autenticação da equipe
     path("api/v1/auth/login/", LoginView.as_view(), name="login"),

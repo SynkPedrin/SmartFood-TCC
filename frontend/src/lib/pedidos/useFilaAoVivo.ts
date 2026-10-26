@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { TOKEN_KEY } from '@/lib/api'
+import { api, TOKEN_KEY } from '@/lib/api'
 
 /**
  * Assina o WebSocket da cozinha e chama `aoMudar` quando a fila muda.
@@ -14,7 +14,7 @@ export function useFilaAoVivo(aoMudar: () => void): { conectado: boolean } {
   const [conectado, setConectado] = useState(false)
   // Guarda o callback numa ref para não reconectar a cada render da página.
   const callback = useRef(aoMudar)
-  callback.current = aoMudar
+  useEffect(() => { callback.current = aoMudar }, [aoMudar])
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
@@ -26,13 +26,19 @@ export function useFilaAoVivo(aoMudar: () => void): { conectado: boolean } {
     let encerrado = false
 
     const base = process.env.NEXT_PUBLIC_WS_URL
-      ?? (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1')
+      || (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1')
         .replace(/^http/, 'ws')
         .replace(/\/api\/v1\/?$/, '')
 
-    function conectar() {
+    async function conectar() {
       if (encerrado) return
-      socket = new WebSocket(`${base}/ws/cozinha/?token=${encodeURIComponent(token!)}`)
+      let ticket: string
+      try { ticket = (await api.post('/auth/ws-ticket/')).data.ticket } catch {
+        if (!encerrado) reconectar = setTimeout(conectar, Math.min(30000, 1000*2**tentativa++))
+        return
+      }
+      if (encerrado) return
+      socket = new WebSocket(`${base}/ws/cozinha/?ticket=${encodeURIComponent(ticket)}`)
 
       socket.onopen = () => { tentativa = 0; setConectado(true) }
 

@@ -8,6 +8,7 @@ export interface Categoria {
 }
 
 export interface Produto {
+  slug?: string | null;
   id: number;
   nome: string;
   descricao: string;
@@ -51,6 +52,7 @@ export interface ItemPedido {
 }
 
 export interface Pedido {
+  acompanhamento: string;
   id: number;
   mesa: number;
   mesa_numero: number;
@@ -68,6 +70,7 @@ export interface Pedido {
 
 /** Corpo enviado pelo totem ao fechar o pedido. */
 export interface NovoPedido {
+  chave_idempotencia?: string;
   mesa: number;
   observacao?: string;
   itens: { produto: number; quantidade: number; observacao?: string }[];

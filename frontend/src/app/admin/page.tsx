@@ -1,162 +1,234 @@
-'use client'
-
-import { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { categoriasApi, produtosApi, mesasApi } from '@/lib/api'
+"use client";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Tag, ShoppingBag, UtensilsCrossed, CheckCircle,
-  ArrowUpRight, BookOpen, ClipboardList,
-} from 'lucide-react'
-
-function Counter({ to }: { to: number }) {
-  const [val, setVal] = useState(0)
-  const started = useRef(false)
-  useEffect(() => {
-    if (started.current || to === 0) { setVal(to); return }
-    started.current = true
-    const t0 = performance.now()
-    const tick = (now: number) => {
-      const progress = Math.min((now - t0) / 900, 1)
-      setVal(Math.round((1 - Math.pow(1 - progress, 3)) * to))
-      if (progress < 1) requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
-  }, [to])
-  return <span>{val}</span>
-}
-
-const STAT_CFG = [
-  { icon: Tag, label: 'Categorias' },
-  { icon: ShoppingBag, label: 'Produtos' },
-  { icon: UtensilsCrossed, label: 'Mesas' },
-  { icon: CheckCircle, label: 'Mesas livres' },
-]
-
-const QUICK = [
-  { href: '/admin/cardapio', icon: BookOpen, label: 'Cardápio', desc: 'Categorias e produtos do menu.' },
-  { href: '/admin/mesas', icon: UtensilsCrossed, label: 'Mesas', desc: 'Status e ocupação do salão.' },
-  { href: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos', desc: 'Acompanhamento do dia.' },
-]
-
-const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } }
-const item = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
-}
-
+  ArrowUpRight,
+  ArrowRight,
+  Banknote,
+  ClipboardList,
+  Users,
+  ChefHat,
+  Bot,
+  BookOpen,
+  UtensilsCrossed,
+  RefreshCw,
+} from "lucide-react";
+import {
+  categoriasApi,
+  produtosApi,
+  mesasApi,
+  indicadoresApi,
+  pedidosApi,
+} from "@/lib/api";
+import type { Indicadores } from "@/lib/ia/context";
+import type { PaginatedResponse, Mesa, Pedido, Produto } from "@/types";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { fotoCardapio } from "@/lib/cardapio";
+const brl = (v: string) =>
+  Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 export default function AdminDashboard() {
-  const { data: cats }  = useQuery({ queryKey: ['categorias'], queryFn: categoriasApi.listar })
-  const { data: prods } = useQuery({ queryKey: ['produtos'],   queryFn: produtosApi.listar })
-  const { data: mesas } = useQuery({ queryKey: ['mesas'],      queryFn: mesasApi.listar })
-
-  const livres = mesas?.results?.filter((m: { status: string }) => m.status === 'disponivel').length ?? 0
-  const stats = [cats?.count ?? 0, prods?.count ?? 0, mesas?.count ?? 0, livres]
-
-  const now = new Date()
-  const hora = now.getHours()
-  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
-  const dataFmt = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
-
+  const { usuario } = useAuth();
+  const indicadores = useQuery<Indicadores>({
+    queryKey: ["indicadores"],
+    queryFn: indicadoresApi.obter,
+    refetchInterval: 15000,
+  });
+  const mesas = useQuery<PaginatedResponse<Mesa>>({
+    queryKey: ["mesas"],
+    queryFn: mesasApi.listar,
+    refetchInterval: 15000,
+  });
+  const produtos = useQuery<PaginatedResponse<Produto>>({
+    queryKey: ["produtos"],
+    queryFn: produtosApi.listar,
+  });
+  const categorias = useQuery({
+    queryKey: ["categorias"],
+    queryFn: categoriasApi.listar,
+  });
+  const fila = useQuery<PaginatedResponse<Pedido>>({
+    queryKey: ["pedidos", "abertos"],
+    queryFn: () => pedidosApi.listar({ aberto: true }),
+    refetchInterval: 15000,
+  });
+  const i = indicadores.data;
+  const itens = [
+    {
+      icon: Banknote,
+      label: "Receita de entregas",
+      value: i ? brl(i.receita) : "—",
+      desc: "Pedidos entregues hoje",
+    },
+    {
+      icon: ClipboardList,
+      label: "Pedidos hoje",
+      value: i ? String(i.pedidos_hoje) : "—",
+      desc: i
+        ? `${i.entregues} entregues · ${i.em_andamento} em andamento`
+        : "Consultando operação",
+    },
+    {
+      icon: Users,
+      label: "Ticket médio",
+      value: i ? brl(i.ticket_medio) : "—",
+      desc: "Por pedido entregue",
+    },
+    {
+      icon: UtensilsCrossed,
+      label: "Mesas disponíveis",
+      value: mesas.data
+        ? `${mesas.data.results.filter((m) => m.status === "disponivel").length} / ${mesas.data.count}`
+        : "—",
+      desc: "Ocupação atual do salão",
+    },
+  ];
+  const visiveis = produtos.data?.results.filter(
+    (p) =>
+      p.disponivel && p.categoria_detalhe?.ativo !== false && fotoCardapio(p),
+  ).length;
+  const erro =
+    indicadores.isError || mesas.isError || fila.isError || produtos.isError;
   return (
-    <div>
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 40 }}
-      >
+    <div className="operations-dashboard">
+      <header className="dashboard-header">
         <div>
-          <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text-primary)', lineHeight: 1.05 }}>
-            {saudacao}
-          </h1>
-          <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginTop: 6 }}>
-            Um panorama do seu restaurante.
-          </p>
+          <span className="eyebrow">VISÃO GERAL DA OPERAÇÃO</span>
+          <h1>Olá, {usuario?.first_name || usuario?.username || "equipe"}.</h1>
+          <p>Seu restaurante, do salão à cozinha.</p>
         </div>
-        <span style={{
-          fontFamily: 'JetBrains Mono, monospace', fontSize: 11,
-          letterSpacing: '0.06em', color: 'var(--text-muted)',
-          textTransform: 'capitalize', paddingBottom: 4,
-        }}>
-          {dataFmt}
-        </span>
-      </motion.div>
-
-      {/* KPI Cards */}
-      <motion.div
-        variants={stagger} initial="hidden" animate="show"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 16, marginBottom: 48 }}
-      >
-        {STAT_CFG.map((s, i) => {
-          const Icon = s.icon
-          return (
-            <motion.div key={s.label} variants={item} className="kpi-card">
-              <span className="kpi-rule" aria-hidden />
-              <div className="kpi-top">
-                <span className="kpi-value"><Counter to={stats[i]} /></span>
-                <span className="kpi-icon"><Icon size={17} strokeWidth={1.75} /></span>
-              </div>
-              <div className="kpi-label">{s.label}</div>
-            </motion.div>
-          )
-        })}
-      </motion.div>
-
-      {/* 2-col grid: quick access + assistant */}
-      <div className="dash-grid">
-        {/* Quick access */}
-        <div>
-          <h2 className="dash-section">Acesso rápido</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {QUICK.map((q, i) => {
-              const Icon = q.icon
-              return (
-                <motion.div
-                  key={q.href}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <Link href={q.href} className="quick-row">
-                    <span className="quick-icon"><Icon size={19} strokeWidth={1.75} /></span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span className="quick-label">{q.label}</span>
-                      <span className="quick-desc">{q.desc}</span>
-                    </span>
-                    <ArrowUpRight size={16} className="quick-arrow" />
-                  </Link>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Assistant - honesto, sem métricas inventadas */}
-        <motion.div
-          initial={{ opacity: 0, x: 14 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.28, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        <button
+          className="btn btn-ghost"
+          onClick={() => {
+            indicadores.refetch();
+            mesas.refetch();
+            fila.refetch();
+            produtos.refetch();
+            categorias.refetch();
+          }}
         >
-          <h2 className="dash-section">Assistente</h2>
-          <div className="assist-card">
-            <div className="assist-body">
-              <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, marginBottom: 10, fontWeight: 500 }}>
-                Converse com os dados do seu restaurante.
-              </p>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 18 }}>
-                Análise de cardápio, geração de descrições e sugestões, a partir
-                dos {stats[1]} produto{stats[1] === 1 ? '' : 's'} e {stats[0]} categoria{stats[0] === 1 ? '' : 's'} cadastrados.
-              </p>
-              <Link href="/admin/ia" className="btn btn-primary" style={{ width: '100%' }}>
-                Abrir assistente
-              </Link>
+          <RefreshCw size={14} /> Atualizar dados
+        </button>
+      </header>
+      {erro && (
+        <div className="error-state" role="alert">
+          Alguns dados não puderam ser atualizados. Verifique a conexão e tente
+          novamente.
+        </div>
+      )}
+      <div className="operation-kpis">
+        {itens.map((k) => (
+          <article key={k.label} className="operation-kpi">
+            <div>
+              <span>{k.label}</span>
+              <k.icon size={17} />
             </div>
-          </div>
-        </motion.div>
+            <strong>{k.value}</strong>
+            <p>{k.desc}</p>
+          </article>
+        ))}
       </div>
+      <div className="operation-grid">
+        <section className="operation-card">
+          <header>
+            <div>
+              <span className="eyebrow">AGORA NA COZINHA</span>
+              <h2>Pedidos em andamento</h2>
+            </div>
+            <Link href="/cozinha">
+              Abrir fila <ArrowUpRight size={15} />
+            </Link>
+          </header>
+          {fila.isLoading ? (
+            <div className="skeleton" style={{ height: 190 }} />
+          ) : fila.isError ? (
+            <p className="dashboard-empty">A fila está indisponível.</p>
+          ) : !fila.data?.results.length ? (
+            <div className="dashboard-empty">
+              <ChefHat size={30} />
+              <p>Tudo em dia por aqui.</p>
+              <span>Os próximos pedidos aparecem nesta lista.</span>
+            </div>
+          ) : (
+            <div className="dashboard-orders">
+              {fila.data.results.slice(0, 6).map((p) => (
+                <div key={p.id}>
+                  <span className="order-number">#{p.id}</span>
+                  <span>
+                    <strong>Mesa {p.mesa_numero}</strong>
+                    <small>
+                      {p.quantidade_itens} itens ·{" "}
+                      {new Date(p.criado_em).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </small>
+                  </span>
+                  <span
+                    className={`badge ${p.status === "pronto" ? "badge-ok" : "badge-purple"}`}
+                  >
+                    {p.status_display}
+                  </span>
+                  <strong>{brl(p.total)}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+          <footer>
+            <Link href="/admin/pedidos">
+              Ver histórico de pedidos <ArrowRight size={14} />
+            </Link>
+          </footer>
+        </section>
+        <section className="operation-card restaurant-overview">
+          <span className="eyebrow">ORGANIZE A CASA</span>
+          <h2>Cardápio e salão</h2>
+          <div>
+            <BookOpen size={18} />
+            <span>
+              <strong>
+                {produtos.data?.count ?? "—"} produtos cadastrados
+              </strong>
+              <small>
+                {visiveis ?? "—"} com foto e disponíveis para o cliente
+              </small>
+            </span>
+            <Link href="/admin/cardapio" aria-label="Gerenciar cardápio">
+              <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          <div>
+            <UtensilsCrossed size={18} />
+            <span>
+              <strong>{mesas.data?.count ?? "—"} mesas no salão</strong>
+              <small>
+                {categorias.data?.count ?? "—"} categorias no cardápio
+              </small>
+            </span>
+            <Link href="/admin/mesas" aria-label="Gerenciar mesas">
+              <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          <div className="dashboard-ai">
+            <Bot size={24} />
+            <h3>
+              Uma conversa.
+              <br />
+              Mais clareza para decidir.
+            </h3>
+            <p>
+              Consulte a operação e explore melhorias com o assistente do
+              restaurante.
+            </p>
+            <Link href="/admin/ia" className="btn btn-primary">
+              Conversar com o assistente <ArrowRight size={14} />
+            </Link>
+          </div>
+        </section>
+      </div>
+      <p className="dashboard-disclaimer">
+        Indicadores do dia no horário de Brasília. Receita corresponde a pedidos
+        entregues; o sistema não processa pagamentos.
+      </p>
     </div>
-  )
+  );
 }

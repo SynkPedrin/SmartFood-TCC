@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-smartfood}
       POSTGRES_USER: ${DB_USER:-smartfood}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-smartfood123}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -41,8 +41,7 @@ services:
       redis:
         condition: service_started
     command: >
-      sh -c "python manage.py makemigrations --no-input &&
-             python manage.py migrate --no-input &&
+      sh -c "python manage.py migrate --no-input &&
              python manage.py runserver 0.0.0.0:8000"
 
   frontend:
@@ -61,7 +60,7 @@ services:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
-    command: node node_modules/next/dist/bin/next dev -H 0.0.0.0
+    command: sh -c "npm ci && node node_modules/next/dist/bin/next dev -H 0.0.0.0"
 
 volumes:
   postgres_data:

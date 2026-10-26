@@ -10,7 +10,7 @@ flowchart TB
         admin[Painel administrativo<br/>equipe]
     end
 
-    subgraph front[Next.js 14 · App Router]
+    subgraph front[Next.js 15 · App Router]
         paginas[Páginas React<br/>TanStack Query]
         rotas[Route handlers<br/>/api/ia/*]
     end
@@ -24,7 +24,7 @@ flowchart TB
     banco[(PostgreSQL)]
     redis[(Redis<br/>camada de canal)]
     groq[Groq API<br/>modelo de linguagem]
-    vault[/cerebro/<br/>vault Obsidian/]
+    vault[/cerebro/<br/>referência somente leitura/]
 
     totem --> paginas
     cozinha --> paginas
@@ -33,7 +33,8 @@ flowchart TB
     paginas -->|assina| ws
     paginas --> rotas
     rotas -->|lê snapshot| api
-    rotas -->|lê memória| vault
+    rotas -->|lê referência| vault
+    rotas -->|memória e marca via API| api
     rotas -->|prompt| groq
     api --> regras --> banco
     ws --- redis
@@ -102,11 +103,11 @@ histórico são operação interna. Por isso `PermissaoPedido` libera só o `cre
 resolve, e o WebSocket morria tentando conectar. O `settings.py` testa se o host resolve
 antes de escolher Redis, caindo para a camada em memória quando não resolve.
 
-### O cérebro da IA vive dentro do frontend
+### Referências da IA acompanham o frontend
 
 `frontend/cerebro/` é um vault Obsidian lido em tempo de execução pelas rotas de IA. Ficava
 na raiz do repositório, mas a Vercel só envia o diretório configurado como raiz do projeto,
-e em produção a IA perdia a memória. O `next.config.js` ainda declara `outputFileTracingIncludes`,
+e em produção a IA perdia essas referências. Novas notas persistem no banco Django, pois funções da Vercel não oferecem escrita local persistente. O `next.config.js` ainda declara `outputFileTracingIncludes`,
 porque leitura por `fs` não é rastreável estaticamente pelo Next.
 
 ### Precedência entre banco e cérebro
@@ -124,12 +125,17 @@ backend/
   apps/produtos/      itens do cardápio
   apps/mesas/         salão
   apps/pedidos/       pedido, itens, fila, WebSocket e seed
+  apps/restaurante/   marca, memória, indicadores e tickets
 frontend/
   src/app/            páginas e route handlers
   src/lib/api.ts      cliente HTTP e interceptors de token
   src/lib/auth/       sessão da equipe
   src/lib/ia/         persona, snapshot e cérebro
   src/lib/pedidos/    assinatura da fila ao vivo
-  cerebro/            vault Obsidian, memória por conta
+  cerebro/            referências de leitura da instalação
 docs/                 esta documentação
 ```
+
+## Revisão de 09/10/2026
+
+A instalação autoriza um único restaurante no backend. A marca e as novas memórias persistem nas tabelas Configuracao e Memoria. O vault é referência de leitura. O totem recebe apenas dados públicos e produtos visíveis. A equipe recebe indicadores agregados por dia. O backend emite tickets de uso único para WebSocket, e os eventos de pedidos são publicados após commit. Pedido possui UUID de acompanhamento público mínimo e chave idempotente opcional. Mais detalhes e limites em 09-auditoria-rap-e-entrega.md.

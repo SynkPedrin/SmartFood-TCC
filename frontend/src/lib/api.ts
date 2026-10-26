@@ -8,6 +8,7 @@ export const api = axios.create({
   // 127.0.0.1 em vez de localhost: o runserver do Django escuta só em IPv4,
   // e o navegador tenta ::1 antes, o que atrasa ou derruba a primeira chamada.
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1",
+  timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -38,6 +39,16 @@ api.interceptors.response.use(
   },
 );
 
+/** Segue páginas por parâmetros locais, sem enviar token a URLs fornecidas pela API. */
+async function listarTodos(resource: string, params: Record<string, unknown> = {}) {
+  const results: unknown[] = []
+  for (let page = 1; page <= 40; page++) {
+    const { data } = await api.get(resource, { params: { ...params, page_size: 500, page } })
+    results.push(...data.results)
+    if (!data.next) return { ...data, results, next: null, previous: null }
+  }
+  throw new Error("Consulta excede o limite de registros. Use filtros mais específicos.")
+}
 // Categorias
 export const categoriasApi = {
   listar: () => api.get("/categorias/", { params: { page_size: 500 } }).then((r) => r.data),
@@ -49,8 +60,8 @@ export const categoriasApi = {
 // Produtos
 export const produtosApi = {
   listar: () => api.get("/produtos/", { params: { page_size: 500 } }).then((r) => r.data),
-  criar: (data: unknown) => api.post("/produtos/", data).then((r) => r.data),
-  atualizar: (id: number, data: unknown) => api.patch(`/produtos/${id}/`, data).then((r) => r.data),
+  criar: (data: unknown) => api.post("/produtos/", data, data instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined).then((r) => r.data),
+  atualizar: (id: number, data: unknown) => api.patch(`/produtos/${id}/`, data, data instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined).then((r) => r.data),
   excluir: (id: number) => api.delete(`/produtos/${id}/`),
 };
 
@@ -65,10 +76,12 @@ export const mesasApi = {
 // Pedidos
 export const pedidosApi = {
   listar: (params?: { aberto?: boolean; status?: PedidoStatus; mesa?: number }) =>
-    api.get("/pedidos/", { params }).then((r) => r.data),
+    listarTodos("/pedidos/", params),
   criar: (data: NovoPedido) => api.post("/pedidos/", data).then((r) => r.data),
   /** Avança o pedido na fila. O backend recusa salto de etapa. */
   mudarStatus: (id: number, status: PedidoStatus) =>
     api.post(`/pedidos/${id}/status/`, { status }).then((r) => r.data),
   excluir: (id: number) => api.delete(`/pedidos/${id}/`),
 };
+
+export const indicadoresApi = { obter: () => api.get("/indicadores/").then(r => r.data) };

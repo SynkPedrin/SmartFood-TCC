@@ -22,9 +22,9 @@ que existe endpoint ou tela funcionando e, quando marcado, teste automatizado co
 | RF13 | Acompanhar histórico de pedidos com filtro por status | Administrador | Implementado |
 | RF14 | Ver receita, número de pedidos, ticket médio e mesas atendidas no dia | Administrador | Implementado |
 | RF15 | Entrar no sistema com usuário e senha | Equipe | Implementado, com teste |
-| RF16 | Personalizar nome, logo, cor de acento e plano de fundo por conta | Administrador | Implementado |
+| RF16 | Personalizar nome, logo, cor de acento e plano de fundo do restaurante | Administrador | Implementado |
 | RF17 | Conversar com um assistente de IA sobre os dados reais do restaurante | Administrador | Implementado |
-| RF18 | Manter memória de longo prazo por conta, isolada entre contas | Sistema | Implementado |
+| RF18 | Manter memória persistente da instalação, com conta autorizada no servidor | Sistema | Implementado |
 | RF19 | Ensinar um fato novo ao assistente, que passa a valer nas próximas respostas | Administrador | Implementado |
 | RF20 | Recomendar pratos ao cliente com base apenas no cardápio existente | Cliente | Implementado |
 
@@ -39,7 +39,7 @@ que existe endpoint ou tela funcionando e, quando marcado, teste automatizado co
 | RNF05 | A interface deve ser usável em tablet no salão e na cozinha | Layout responsivo, alvos de toque grandes na cozinha |
 | RNF06 | O sistema deve continuar utilizável se um serviço cair | Cozinha volta para busca periódica sem WebSocket; a IA avisa quando o banco está fora em vez de inventar |
 | RNF07 | O código deve ser reproduzível em outra máquina | Docker Compose, `.env.example` e comando de seed |
-| RNF08 | Deve haver testes automatizados do núcleo | 22 testes cobrindo pedido, fluxo de status, permissões e autenticação |
+| RNF08 | Deve haver testes automatizados do núcleo | 49 testes do backend e 12 do assistente/cardápio; integração local registrada |
 | RNF09 | Respeitar preferência de menos movimento | `prefers-reduced-motion` respeitado nas animações |
 
 ## Fora do escopo
@@ -56,3 +56,7 @@ Declarado para a banca não cobrar o que nunca foi prometido:
 - Justificativa do tema e problema de pesquisa.
 - Público-alvo real considerado, se houve entrevista ou levantamento.
 - Priorização (MoSCoW ou similar) e o critério usado.
+
+## Validação da revisão de entrega
+
+Em 09/10/2026 passaram 49 testes do backend e 12 do frontend/assistente. A integração local confirmou o fluxo de pedidos e a memória persistente. RF16 agora salva a marca pela API e RF18/RF19 persistem novas memórias no banco. Uma instalação atende um restaurante. RF20 oferece consulta local identificada e integração configurável com Groq; a chamada real ao provedor segue sem verificação nesta revisão. A inspeção visual e a confirmação pública seguem pendentes.

@@ -8,6 +8,8 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db import transaction
+import logging
 
 from .consumers import GRUPO_COZINHA
 from .models import Pedido
@@ -19,7 +21,8 @@ def avisar_cozinha(sender, instance: Pedido, created: bool, **kwargs):
     if camada is None:
         return
 
-    try:
+    def enviar():
+      try:
         async_to_sync(camada.group_send)(
             GRUPO_COZINHA,
             {
@@ -29,7 +32,8 @@ def avisar_cozinha(sender, instance: Pedido, created: bool, **kwargs):
                 "novo": created,
             },
         )
-    except Exception:
+      except Exception:
         # Sem Redis no ambiente, o pedido não pode falhar por causa do aviso:
         # a cozinha ainda tem a busca periódica como rede de segurança.
-        pass
+        logging.getLogger(__name__).warning("Aviso da cozinha indisponível", exc_info=True)
+    transaction.on_commit(enviar)

@@ -11,7 +11,8 @@ export const IMAGEM_FALLBACK = '/images/menu/default-food.svg'
 
 export function imagemUrl(imagem: string | null | undefined): string {
   if (!imagem) return IMAGEM_FALLBACK
-  if (imagem.startsWith('http')) return imagem
+  if (imagem.startsWith('/images/')) return imagem
+  if (/^https?:\/\//.test(imagem)) return imagem
   return `${API_ORIGEM}${imagem}`
 }
 

@@ -14,7 +14,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.categorias.models import Categoria
@@ -81,6 +81,8 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if not settings.DEMO_PASSWORD:
+            raise CommandError("Defina DEMO_PASSWORD para criar a demonstração em produção.")
         if options["limpar"]:
             ItemPedido.objects.all().delete()
             Pedido.objects.all().delete()
@@ -118,10 +120,10 @@ class Command(BaseCommand):
 
         # Usuário da equipe: sem ele não dá para entrar no painel nem na cozinha.
         Usuario = get_user_model()
-        senha = getattr(settings, "DEMO_PASSWORD", None) or "smartfood123"
+        senha = settings.DEMO_PASSWORD
         equipe, novo_usuario = Usuario.objects.get_or_create(
             username="admin",
-            defaults={"first_name": "Equipe", "is_staff": True, "is_superuser": True},
+            defaults={"first_name": "Equipe", "is_staff": True, "is_superuser": False},
         )
         if novo_usuario:
             equipe.set_password(senha)
@@ -148,7 +150,7 @@ class Command(BaseCommand):
 
         if novo_usuario:
             self.stdout.write(
-                self.style.WARNING(f'Usuário "admin" criado com a senha "{senha}". Troque fora do ambiente local.')
+                self.style.WARNING('Usuário "admin" criado. Use a senha definida em DEMO_PASSWORD.')
             )
 
         self.stdout.write(

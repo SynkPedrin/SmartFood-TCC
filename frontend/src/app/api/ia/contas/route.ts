@@ -1,19 +1,17 @@
-import { listarContas, vaultRoot } from '@/lib/ia/cerebro'
-
-// Precisa de fs: runtime Node, nunca Edge.
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-/** Lista as contas que possuem cérebro no vault, para o seletor da interface. */
-export async function GET() {
-  const root = await vaultRoot()
-  if (!root) {
-    return Response.json(
-      { disponivel: false, contas: [], erro: 'Vault do cérebro não encontrado.' },
-      { status: 200 },
-    )
-  }
-
-  const contas = await listarContas()
-  return Response.json({ disponivel: true, contas })
+import { NextRequest } from "next/server";
+import { autorizar } from "@/lib/ia/server";
+import { carregarCerebro } from "@/lib/ia/cerebro";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export async function GET(req: NextRequest) {
+  const acesso = await autorizar(req, "admin");
+  if (acesso.error) return acesso.error;
+  const cerebro = await carregarCerebro(acesso.conta!);
+  return Response.json(
+    {
+      disponivel: true,
+      contas: [cerebro?.conta ?? { slug: acesso.conta, nome: acesso.conta }],
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

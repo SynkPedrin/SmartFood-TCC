@@ -1,68 +1,36 @@
-# Testes
+# Testes e evidências
 
-## Como rodar
+Revisão de 09/10/2026. O backend mantém os 22 testes originais de pedidos e autenticação e acrescenta 27 testes de entrega e segurança, totalizando 49. O frontend tem 12 testes de foto e assistente local.
 
-```bash
+## Backend
+
+```sh
 cd backend
-python manage.py test                 # tudo
-python manage.py test apps.pedidos    # só o fluxo de pedido
+.venv/bin/python manage.py test
 ```
 
-Em máquina sem PostgreSQL, aponte para SQLite antes de rodar:
+Os testes cobrem estado inicial obrigatório, fluxo de etapas, preço congelado, mesa ocupada/liberada, item indisponível, pedido vazio, quantidade limitada, idempotência, bloqueio da alteração de itens e mesa, preservação do histórico, autorização da IA, isolamento da instalação, limites de chamada, memória persistente e autoria, marca persistente, indicadores além da primeira página, expiração de token e ticket WebSocket de uso único.
 
-```bash
-DATABASE_URL="sqlite:///db.sqlite3" python manage.py test
+O teste de indicadores cria 25 pedidos entregues e um cancelado, confirmando receita de R$ 500,00 e ticket médio de R$ 20,00. Esses valores pertencem à fixture de teste, sem representar vendas do restaurante.
+
+## Frontend e assistente
+
+```sh
+cd frontend
+npm test
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-O Django cria e destrói um banco de teste próprio, então o banco de desenvolvimento
-não é tocado.
+Os 12 testes confirmam resolução de fotos locais, exclusão de placeholders, preferência pela foto enviada pelo administrador, existência dos 24 arquivos do manifesto, recomendação por orçamento, exclusão de item indisponível, indicação de fonte local, ausência de garantias de alergênicos e de ranking/receita não consultados, fallback do backend indisponível e regras do prompt.
 
-## O que é coberto
+As respostas livres do provedor externo não são avaliadas por esses testes. A chamada real à Groq não foi verificada sem chave no ambiente isolado. Não há teste automatizado da interface no navegador.
 
-22 testes, concentrados onde um erro causa prejuízo de verdade.
+## Integração executada
 
-### Criação de pedido
+`node scripts/smoke.mjs` roda somente no ambiente local de apresentação e cria/conclui um pedido real. O resultado com data e verificações está em `evidencias/smoke.json`. O script confirma acesso da IA, pedido sem duplicação, todas as etapas, mesa liberada, receita, memória relida no banco, consultas locais de assistente e handshake WebSocket autenticado.
 
-| Teste | Por que existe |
-|-------|----------------|
-| Cliente sem login consegue pedir | O totem é usado por quem não tem conta |
-| Pedido ocupa a mesa | Regra de salão que o sistema mantém sozinho |
-| Preço do item fica congelado | Reajuste de cardápio não pode reescrever venda antiga |
-| Produto indisponível é recusado | Evita vender o que a cozinha não tem |
-| Pedido sem item é recusado | Pedido vazio não é pedido |
+## Limitações
 
-### Fluxo de status
-
-| Teste | Por que existe |
-|-------|----------------|
-| Avança uma etapa por vez | É o caminho feliz da cozinha |
-| Não pula etapa | Marcar entregue sem preparar esconde erro de operação |
-| Não volta no tempo | Histórico de produção precisa ser confiável |
-| Pronto não pode ser cancelado | O prato já foi feito; o custo já existe |
-| Entregar libera a mesa | Salão precisa refletir a realidade |
-| Mesa segue ocupada com outro pedido aberto | O caso que quebra a regra ingênua |
-
-### Fila e permissões
-
-| Teste | Por que existe |
-|-------|----------------|
-| Filtro `aberto` traz só a fila viva | É o que a cozinha consome |
-| Tempo estimado é do item mais demorado | A cozinha trabalha em paralelo, não em série |
-| Ler fila exige login | Dado de operação não é público |
-| Mudar status exige login | Ninguém de fora move a fila |
-| Cardápio é leitura pública | O totem depende disso |
-| Escrever no cardápio exige login | Era o buraco de segurança original |
-
-### Autenticação
-
-Login válido, senha errada, identificação pelo token, logout invalidando o token e acesso
-sem token.
-
-## O que não é coberto
-
-Dito com clareza porque banca pergunta:
-
-- Interface: não há teste automatizado de componente. As telas foram verificadas com
-  navegador real, clicando pelo protocolo de depuração do Chrome.
-- WebSocket: verificado manualmente ponta a ponta, sem teste automatizado.
-- Camada de IA: depende de serviço externo e resposta não determinística.
+A inspeção visual da interface foi impedida pela política da ferramenta de navegador. A integração pública não foi verificada sem as URLs. A stack PostgreSQL/Redis em Docker não foi executada porque o daemon estava desligado. Não houve teste de carga nem teste de penetração.

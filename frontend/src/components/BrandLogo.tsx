@@ -33,7 +33,6 @@ export function BrandLogo({ size = 40, radius = 12, style }: BrandLogoProps) {
       }}
     >
       {custom ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={custom}
           alt={brand.name}

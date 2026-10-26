@@ -5,8 +5,8 @@ de status, quem estiver na cozinha recebe um evento curto e busca a fila
 atualizada pela API. Assim não existe risco de a tela e o banco divergirem, e o
 payload do socket não carrega dado de operação.
 
-Autenticação: o mesmo token do REST, passado em `?token=`. WebSocket não manda
-cabeçalho Authorization pelo navegador, então a query string é o caminho usual.
+Autenticação: ticket de uso único com validade de 30 segundos, emitido pela API
+autenticada. O token da equipe não aparece na URL do WebSocket.
 """
 
 from channels.db import database_sync_to_async
@@ -16,13 +16,22 @@ GRUPO_COZINHA = "cozinha"
 
 
 @database_sync_to_async
-def _usuario_do_token(chave: str):
-    from rest_framework.authtoken.models import Token
-
+def _usuario_do_ticket(chave: str):
+    import uuid
+    from django.db import transaction
+    from django.utils import timezone
+    from apps.restaurante.models import WebsocketTicket
     try:
-        return Token.objects.select_related("user").get(key=chave).user
-    except Token.DoesNotExist:
+        codigo = uuid.UUID(chave)
+    except (ValueError, TypeError):
         return None
+    with transaction.atomic():
+        ticket = WebsocketTicket.objects.select_for_update().select_related('usuario').filter(codigo=codigo, expira_em__gt=timezone.now()).first()
+        if not ticket:
+            return None
+        usuario = ticket.usuario
+        ticket.delete()
+        return usuario
 
 
 class FilaConsumer(AsyncJsonWebsocketConsumer):
@@ -30,11 +39,11 @@ class FilaConsumer(AsyncJsonWebsocketConsumer):
         query = self.scope.get("query_string", b"").decode()
         chave = ""
         for parte in query.split("&"):
-            if parte.startswith("token="):
-                chave = parte[len("token="):]
+            if parte.startswith("ticket="):
+                chave = parte[len("ticket="):]
                 break
 
-        usuario = await _usuario_do_token(chave) if chave else None
+        usuario = await _usuario_do_ticket(chave) if chave else None
         if usuario is None or not usuario.is_active:
             # 4401: fecha deixando claro que faltou credencial, não que caiu.
             await self.close(code=4401)

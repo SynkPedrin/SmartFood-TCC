@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { TOKEN_KEY } from '@/lib/api'
 
 /** Espelho client-side de ContaMeta (o tipo do servidor vive em lib/ia/cerebro.ts). */
 export interface ContaCerebro {
@@ -26,7 +27,7 @@ export function useContasCerebro(): Estado {
 
   useEffect(() => {
     let vivo = true
-    fetch('/api/ia/contas')
+    fetch('/api/ia/contas', { headers: { Authorization: `Token ${localStorage.getItem(TOKEN_KEY) || ''}` } })
       .then(r => r.json())
       .then((d: { disponivel?: boolean; contas?: ContaCerebro[] }) => {
         if (!vivo) return

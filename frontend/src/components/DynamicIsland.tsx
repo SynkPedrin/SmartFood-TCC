@@ -125,7 +125,7 @@ export function DynamicIsland() {
       { scale: 0.93 },
       { scale: 1, duration: 0.55, ease: 'elastic.out(1, 0.45)' }
     )
-  }, [pathname])
+  }, [pathname, wasActive])
 
   /* GSAP glow burst on expand */
   useEffect(() => {

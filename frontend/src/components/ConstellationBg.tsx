@@ -84,7 +84,7 @@ export function ConstellationBg() {
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseleave', onMouseLeave)
 
-    function moveDot(d: SandDot | Node, speed: number) {
+    function moveDot(d: SandDot | Node, _speed: number) {
       const { x: mx, y: my } = mouseRef.current
       const dx = d.x - mx; const dy = d.y - my
       const distSq = dx * dx + dy * dy

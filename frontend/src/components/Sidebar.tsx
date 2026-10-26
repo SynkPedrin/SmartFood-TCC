@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { API_ORIGEM } from '@/lib/imagem'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Tag, ShoppingBag, UtensilsCrossed,
-  ExternalLink, ChevronRight, X, Menu, Zap,
+  ExternalLink, ChevronRight, Menu, Zap,
 } from 'lucide-react'
 
 const NAV = [

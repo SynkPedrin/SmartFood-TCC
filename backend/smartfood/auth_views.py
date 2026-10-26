@@ -6,12 +6,16 @@ invalida a sessão em todos os dispositivos daquele usuário.
 """
 
 from django.contrib.auth import authenticate
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.throttling import ScopedRateThrottle
 
 
 class LoginSerializer(serializers.Serializer):
@@ -36,6 +40,8 @@ class LoginView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
 
     @extend_schema(
         summary="Entrar",
@@ -58,6 +64,7 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        Token.objects.filter(user=usuario, created__lte=timezone.now()-timedelta(hours=settings.TOKEN_TTL_HOURS)).delete()
         token, _ = Token.objects.get_or_create(user=usuario)
         return Response({"token": token.key, "usuario": UsuarioSerializer(usuario).data})
 
@@ -81,3 +88,12 @@ class LogoutView(APIView):
     def post(self, request):
         Token.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class WebsocketTicketView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from apps.restaurante.models import WebsocketTicket
+        WebsocketTicket.objects.filter(expira_em__lte=timezone.now()).delete()
+        ticket = WebsocketTicket.objects.create(usuario=request.user, expira_em=timezone.now()+timedelta(seconds=30))
+        return Response({"ticket": str(ticket.codigo), "expires_in": 30})

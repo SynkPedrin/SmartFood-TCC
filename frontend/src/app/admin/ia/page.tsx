@@ -8,9 +8,11 @@ import Markdown from '@/components/Markdown'
 import ParticleBall from '@/components/ParticleBall'
 import { useIAChat, nextChatId, type ChatMsg } from '@/lib/ia/useChat'
 import { useContasCerebro } from '@/lib/ia/useContas'
+import { TOKEN_KEY } from '@/lib/api'
 import { useBrand } from '@/lib/brand/BrandContext'
 
 const SUGGESTIONS = [
+  { label: 'Resumo da operação', prompt: 'Mostre o resumo de vendas, receita, ticket médio e pedidos de hoje.' },
   { label: 'Resumo do cardápio',   prompt: 'Analise meu cardápio atual: quantos produtos e categorias existem, faixa de preços e o que está faltando.' },
   { label: 'Gerar descrição',      prompt: 'Gere uma descrição curta e apetitosa para um "Frango Grelhado com limão, alho e azeite".' },
   { label: 'Otimizar cardápio',    prompt: 'Com base nos produtos cadastrados, sugira 3 melhorias concretas para aumentar as vendas.' },
@@ -20,7 +22,7 @@ const SUGGESTIONS = [
 
 const GREETING = `Olá. Sou o assistente do SmartFood.
 
-Estou conectado aos dados reais do seu restaurante: produtos, categorias e mesas cadastrados. Posso analisar o cardápio, gerar descrições de pratos e sugerir promoções com base no que existe.
+Posso consultar os dados do seu restaurante: produtos, categorias e mesas cadastrados. Posso analisar o cardápio, gerar descrições de pratos e sugerir promoções com base no que existe.
 
 Escolha uma sugestão ao lado ou escreva sua pergunta.`
 
@@ -58,13 +60,13 @@ export default function IAPage() {
     try {
       const res = await fetch('/api/ia/memoria', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Token ${localStorage.getItem(TOKEN_KEY) || ''}` },
         body: JSON.stringify({ conta: brand.accountId, texto }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? `Erro ${res.status}`)
       setAprendizado('')
-      toast.success(`Memorizado em ${data.arquivo}`)
+      toast.success('Memória salva no banco do restaurante.')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Não consegui gravar no cérebro')
     } finally {
@@ -260,7 +262,7 @@ export default function IAPage() {
               <BookPlus size={14} style={{ color: 'var(--terracotta)' }} /> Ensinar ao cérebro
             </h3>
             <p style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 10 }}>
-              O que você escrever vira memória permanente {conta ? `de ${conta.nome}` : 'da conta'} e passa a valer na próxima resposta.
+              O que você escrever é salvo no banco como memória {conta ? `de ${conta.nome}` : 'da conta'} e passa a valer na próxima resposta.
             </p>
             <textarea
               value={aprendizado}
@@ -289,7 +291,7 @@ export default function IAPage() {
 
           <div style={{ marginTop: 16, padding: '14px', borderRadius: 14, background: 'rgba(123,46,255,0.07)', border: '2px solid rgba(123,46,255,0.20)', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-              <strong style={{ color: 'var(--terracotta)' }}>Respostas ao vivo</strong> geradas pela Groq (Llama 3.3), com base nos produtos, categorias e mesas cadastrados mais o cérebro da conta. Com o backend offline, o assistente avisa e responde apenas com o cérebro e conhecimento geral.
+              <strong style={{ color: 'var(--terracotta)' }}>Dados da operação</strong> consultados na API. O serviço externo gera análises quando configurado; o assistente local responde consultas de cardápio e indicadores quando ele está indisponível. Cada resposta local é identificada.
             </p>
           </div>
         </div>

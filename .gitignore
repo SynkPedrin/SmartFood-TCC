@@ -53,3 +53,6 @@ skills-lock.json
 
 # Build artifacts
 *.tsbuildinfo
+
+# Artefatos intermediários da revisão
+.artifact-build/

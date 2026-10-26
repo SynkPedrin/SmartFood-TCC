@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from django.core.validators import MinValueValidator
@@ -5,6 +6,8 @@ from django.db import models
 
 
 class Pedido(models.Model):
+    acompanhamento = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    chave_idempotencia = models.UUIDField(unique=True, null=True, blank=True)
     """Pedido feito em uma mesa. Percorre a fila da cozinha até ser entregue."""
 
     class Status(models.TextChoices):

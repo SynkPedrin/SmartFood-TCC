@@ -1,0 +1,18 @@
+{
+  "data": "2026-10-09T14:56:05.340Z",
+  "ambiente": "local",
+  "pedido_verificado": 2,
+  "verificacoes": [
+    "IA administrativa bloqueia usuário sem sessão",
+    "Lista de contas restrita à instalação autenticada",
+    "Pedido persistido uma vez mesmo com repetição do envio",
+    "Pedido avança por todas as etapas e libera a mesa",
+    "Receita e ticket são confirmados após a entrega",
+    "Memória gravada pela rota Next e relida no banco",
+    "Assistente local recomenda itens visíveis dentro do orçamento",
+    "Assistente administrativo consulta os indicadores autenticados",
+    "Payload inválido é recusado sem erro de servidor",
+    "WebSocket autenticado por ticket conectado"
+  ],
+  "provedor_externo": "não verificado: GROQ_API_KEY ausente no ambiente de teste"
+}

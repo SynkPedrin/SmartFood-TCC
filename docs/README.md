@@ -13,11 +13,7 @@ Documentação técnica versionada junto do código, para não envelhecer separa
 | [07-implantacao.md](07-implantacao.md) | Como publicar frontend e backend |
 | [08-monografia.md](08-monografia.md) | Esqueleto do texto acadêmico e o que ainda depende de você |
 
-## Como ler
+| [09-auditoria-rap-e-entrega.md](09-auditoria-rap-e-entrega.md) | Comparação com o RAP, alterações, evidências e limites |
+| [10-roteiro-defesa.md](10-roteiro-defesa.md) | Demonstração e perguntas da banca |
 
-Os diagramas estão em [Mermaid](https://mermaid.js.org), que o GitHub renderiza
-direto na página. Não é preciso ferramenta nenhuma para visualizar.
-
-Trechos marcados com **`A PREENCHER`** são decisões suas: instituição, orientador,
-justificativa, cronograma e referências. Nada disso foi inventado aqui de propósito,
-porque texto acadêmico inventado é pior que texto faltando.
+Os diagramas usam Mermaid. A monografia é material técnico revisado, com campos acadêmicos que dependem da confirmação dos autores. Os slides editáveis estão em `../output/SmartFood-Defesa-TCC.pptx`.

@@ -27,18 +27,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Token guardado não é sessão válida: pode ter sido revogado no servidor.
   // Por isso a sessão só é considerada boa depois que /auth/eu/ confirma.
   useEffect(() => {
-    const token = typeof window === 'undefined' ? null : localStorage.getItem(TOKEN_KEY)
-    if (!token) {
-      setCarregando(false)
-      return
-    }
-    api.get<Usuario>('/auth/eu/')
-      .then(r => setUsuario(r.data))
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY)
-        setUsuario(null)
-      })
-      .finally(() => setCarregando(false))
+    let vivo = true
+    Promise.resolve().then(async () => {
+      const token = localStorage.getItem(TOKEN_KEY)
+      if (!token) return null
+      return (await api.get<Usuario>('/auth/eu/')).data
+    }).then(u => { if (vivo) setUsuario(u) })
+      .catch(() => { localStorage.removeItem(TOKEN_KEY); if (vivo) setUsuario(null) })
+      .finally(() => { if (vivo) setCarregando(false) })
+    return () => { vivo = false }
+
   }, [])
 
   const entrar = useCallback(async (username: string, password: string) => {

@@ -1,187 +1,120 @@
-'use client'
-
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard, BookOpen, UtensilsCrossed,
-  ClipboardList, Bot, Home, ChefHat, Palette, LogOut,
-} from 'lucide-react'
-import { BrandLogo } from '@/components/BrandLogo'
-import { useAuth } from '@/lib/auth/AuthContext'
-
-const NAV_SECTIONS = [
-  {
-    label: 'Início',
-    items: [
-      { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-    ],
-  },
-  {
-    label: 'Cardápio',
-    items: [
-      { href: '/admin/cardapio', icon: BookOpen, label: 'Cardápio' },
-      { href: '/admin/mesas', icon: UtensilsCrossed, label: 'Mesas' },
-    ],
-  },
-  {
-    label: 'Operações',
-    items: [
-      { href: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
-    ],
-  },
-  {
-    label: 'IA SmartFood',
-    items: [
-      { href: '/admin/ia', icon: Bot, label: 'Conversas' },
-    ],
-  },
-  {
-    label: 'Conta',
-    items: [
-      { href: '/admin/personalizacao', icon: Palette, label: 'Personalização' },
-    ],
-  },
-]
-
-const FOOTER_LINKS = [
-  { href: '/', icon: Home, label: 'Seleção de modo' },
-  { href: '/cozinha', icon: ChefHat, label: 'Ir para Cozinha' },
-]
-
+  LayoutDashboard,
+  BookOpen,
+  UtensilsCrossed,
+  ClipboardList,
+  Bot,
+  Home,
+  ChefHat,
+  Palette,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { BrandLogo } from "./BrandLogo";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useBrand } from "@/lib/brand/BrandContext";
+const nav = [
+  { href: "/admin", icon: LayoutDashboard, label: "Visão geral" },
+  { href: "/admin/cardapio", icon: BookOpen, label: "Cardápio" },
+  { href: "/admin/mesas", icon: UtensilsCrossed, label: "Salão e mesas" },
+  { href: "/admin/pedidos", icon: ClipboardList, label: "Pedidos" },
+  { href: "/admin/ia", icon: Bot, label: "Assistente IA" },
+  { href: "/admin/personalizacao", icon: Palette, label: "Identidade da casa" },
+];
 export function AdminSidebar() {
-  const pathname = usePathname()
-  const { usuario, sair } = useAuth()
-  const router = useRouter()
-
-  function isActive(href: string, exact?: boolean) {
-    if (exact) return pathname === href
-    return pathname.startsWith(href)
-  }
-
+  const pathname = usePathname(),
+    router = useRouter(),
+    { usuario, sair } = useAuth(),
+    { brand } = useBrand();
+  const [aberto, setAberto] = useState(false);
   return (
-    <aside className="admin-sidebar-wrap">
-      {/* Logo */}
-      <div style={{
-        padding: '26px 14px 22px',
-        borderBottom: '1px solid var(--border)',
-        flexShrink: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }} className="sidebar-logo-wrap">
-        <BrandLogo size={140} radius={20} />
+    <>
+      <div className="mobile-admin-bar">
+        <BrandLogo size={30} />
+        <strong>{brand.name}</strong>
+        <button
+          aria-label={aberto ? "Fechar navegação" : "Abrir navegação"}
+          aria-expanded={aberto}
+          onClick={() => setAberto(!aberto)}
+        >
+          {aberto ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
-
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
-        {NAV_SECTIONS.map(section => (
-          <div key={section.label} style={{ marginBottom: 6 }}>
-            <div className="sidebar-section-label" style={{
-              fontSize: 10, fontWeight: 700,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              padding: '10px 10px 4px',
-            }}>
-              {section.label}
+      {aberto && (
+        <div className="sidebar-overlay" onClick={() => setAberto(false)} />
+      )}
+      <aside className={`admin-sidebar-wrap ${aberto ? "open" : ""}`}>
+        <Link href="/admin" className="admin-brand">
+          <BrandLogo size={45} />
+          <span className="sidebar-label">
+            <strong>{brand.name}</strong>
+            <small>GESTÃO DO RESTAURANTE</small>
+          </span>
+        </Link>
+        <nav className="admin-navigation" aria-label="Administração">
+          <span className="sidebar-section-label">WORKSPACE</span>
+          {nav.map((n) => {
+            const ativo =
+              n.href === "/admin"
+                ? pathname === n.href
+                : pathname.startsWith(n.href);
+            return (
+              <Link
+                href={n.href}
+                key={n.href}
+                onClick={() => setAberto(false)}
+                aria-current={ativo ? "page" : undefined}
+                title={n.label}
+                className={`admin-nav-link ${ativo ? "active" : ""}`}
+              >
+                <n.icon size={18} />
+                <span className="sidebar-label">{n.label}</span>
+                {n.href === "/admin/ia" && (
+                  <small className="sidebar-label">IA</small>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="admin-sidebar-footer">
+          <Link href="/cozinha" title="Cozinha" className="admin-nav-link">
+            <ChefHat size={18} />
+            <span className="sidebar-label">Abrir cozinha</span>
+          </Link>
+          <Link href="/" title="Início" className="admin-nav-link">
+            <Home size={18} />
+            <span className="sidebar-label">Seleção de ambiente</span>
+          </Link>
+          {usuario && (
+            <div className="admin-user">
+              <div className="user-avatar">
+                {(usuario.first_name || usuario.username)
+                  .slice(0, 1)
+                  .toUpperCase()}
+              </div>
+              <span className="sidebar-label">
+                <strong>{usuario.first_name || usuario.username}</strong>
+                <small>Equipe do restaurante</small>
+              </span>
+              <button
+                title="Sair"
+                aria-label="Sair da conta"
+                onClick={async () => {
+                  await sair();
+                  router.replace("/entrar");
+                }}
+              >
+                <LogOut size={17} />
+              </button>
             </div>
-
-            {section.items.map(item => {
-              const active = isActive(item.href, 'exact' in item ? item.exact as boolean : false)
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={active ? 'nav-item nav-item-active' : 'nav-item'}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 11,
-                    padding: '9px 12px', borderRadius: 8,
-                    textDecoration: 'none', marginBottom: 2,
-                    fontSize: 13.5, fontWeight: active ? 600 : 500,
-                    color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    background: active ? 'var(--bg-surface)' : 'transparent',
-                    position: 'relative',
-                    transition: 'background 0.14s ease, color 0.14s ease',
-                    minHeight: 42,
-                  }}
-                  onMouseEnter={e => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'rgba(22,22,26,0.035)'
-                      e.currentTarget.style.color = 'var(--text-primary)'
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.color = 'var(--text-secondary)'
-                    }
-                  }}
-                >
-                  {active && <span aria-hidden style={{ position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 3, background: 'var(--primary)' }} />}
-                  <Icon size={16} style={{ flexShrink: 0, color: active ? 'var(--primary)' : 'currentColor', opacity: active ? 1 : 0.7 }} />
-                  <span className="sidebar-label">{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div style={{
-        padding: '10px 8px 14px',
-        borderTop: '1px solid var(--border)',
-        flexShrink: 0,
-      }}>
-        {FOOTER_LINKS.map(item => {
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '9px 12px', borderRadius: 10,
-                textDecoration: 'none', marginBottom: 2,
-                fontSize: 13, fontWeight: 600,
-                color: 'var(--text-muted)',
-                transition: 'all 0.14s ease',
-                minHeight: 40,
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(0,0,0,0.05)'
-                e.currentTarget.style.color = 'var(--text-primary)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--text-muted)'
-              }}
-            >
-              <Icon size={15} style={{ flexShrink: 0 }} />
-              <span className="sidebar-label">{item.label}</span>
-            </Link>
-          )
-        })}
-
-        {/* Sessão da equipe */}
-        {usuario && (
-          <button
-            onClick={async () => { await sair(); router.replace('/entrar') }}
-            title={`Sair da conta ${usuario.username}`}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-              padding: '9px 12px', borderRadius: 10, marginTop: 6,
-              border: 0, background: 'transparent', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-              color: 'var(--text-muted)', textAlign: 'left', minHeight: 40,
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#b91c1c' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
-          >
-            <LogOut size={15} style={{ flexShrink: 0 }} />
-            <span className="sidebar-label">Sair ({usuario.first_name || usuario.username})</span>
-          </button>
-        )}
-      </div>
-    </aside>
-  )
+          )}
+        </div>
+      </aside>
+    </>
+  );
 }

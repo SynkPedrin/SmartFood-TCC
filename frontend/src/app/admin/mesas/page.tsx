@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { mesasApi } from '@/lib/api'
 import type { Mesa, PaginatedResponse } from '@/types'
+import { MesaQR } from '@/components/MesaQR'
 import { Modal } from '@/components/Modal'
-import { UtensilsCrossed, Plus, Pencil, Trash2, Users, CheckCircle, XCircle, Clock, Wrench } from 'lucide-react'
+import { QrCode, UtensilsCrossed, Plus, Pencil, Trash2, Users, CheckCircle, XCircle, Clock, Wrench } from 'lucide-react'
 
 type Form = { numero: string; capacidade: string; status: Mesa['status'] }
 const EMPTY: Form = { numero: '', capacidade: '4', status: 'disponivel' }
@@ -33,6 +34,7 @@ export default function MesasPage() {
   const [form, setForm]   = useState<Form>(EMPTY)
   const [editId, setEditId] = useState<number | null>(null)
   const [modal, setModal] = useState(false)
+  const [qrMesa,setQrMesa]=useState<number | null>(null)
 
   const { data, isLoading } = useQuery<PaginatedResponse<Mesa>>({
     queryKey: ['mesas'], queryFn: mesasApi.listar,
@@ -121,6 +123,7 @@ export default function MesasPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, color: 'rgba(17,17,17,0.55)' }}>
                     <Users size={10} /> {mesa.capacidade}
                   </div>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setQrMesa(mesa.numero)} aria-label={`QR code da mesa ${mesa.numero}`} style={{fontSize:10,gap:5}}><QrCode size={14}/> Cardápio QR</button>
                   <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4, opacity: 0, transition: 'opacity .2s' }} className="mesa-actions">
                     <button onClick={e => { e.stopPropagation(); open(mesa) }} className="btn btn-ghost btn-icon btn-xs" style={{ width: 28, height: 28, borderRadius: 7 }}><Pencil size={10} /></button>
                     <button onClick={e => { e.stopPropagation(); if (!confirm(`Excluir Mesa ${mesa.numero}?`)) return; excluir.mutate(mesa.id) }} className="btn btn-danger btn-icon btn-xs" style={{ width: 28, height: 28, borderRadius: 7 }}><Trash2 size={10} /></button>
@@ -134,6 +137,7 @@ export default function MesasPage() {
 
       <style jsx global>{`.mesa-card:hover .mesa-actions { opacity: 1 !important; }`}</style>
 
+      <Modal open={qrMesa !== null} onClose={() => setQrMesa(null)} title={`Cardápio da mesa ${qrMesa}`}><MesaQR numero={qrMesa ?? 1}/></Modal>
       <Modal open={modal} onClose={close} title={editId ? 'Editar Mesa' : 'Nova Mesa'}
         footer={<><button onClick={close} className="btn btn-ghost btn-sm">Cancelar</button><button onClick={() => salvar.mutate()} disabled={salvar.isPending || !form.numero} className="btn btn-primary btn-sm">{salvar.isPending ? 'Salvando...' : editId ? 'Salvar' : 'Criar'}</button></>}
       >

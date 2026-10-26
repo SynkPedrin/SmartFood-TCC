@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-smartfood}
+      POSTGRES_USER: ${DB_USER:-smartfood}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ${DB_USER:-smartfood} -d ${DB_NAME:-smartfood}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: [sh, -c, 'exec redis-server --requirepass "$${REDIS_PASSWORD}"']
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Defina REDIS_PASSWORD}
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DEBUG: "False"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_SSL_REQUIRE: "False"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+    volumes: [media_data:/app/media]
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Defina NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      INTERNAL_API_URL: http://backend:8000/api/v1
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [backend]
+volumes:
+  postgres_data:
+  media_data:

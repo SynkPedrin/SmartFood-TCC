@@ -46,6 +46,8 @@ erDiagram
         int id PK
         int mesa_id FK
         string status
+        uuid acompanhamento UK
+        uuid chave_idempotencia UK
         text observacao
         datetime criado_em
         datetime atualizado_em
@@ -125,7 +127,7 @@ trabalha em paralelo.
 |-------|------|-------|
 | pedido | FK | `CASCADE`: item não existe sem o pedido |
 | produto | FK | `PROTECT`: produto vendido não some do histórico |
-| quantidade | smallint | Mínimo 1 |
+| quantidade | smallint | Entre 1 e 99 pela API |
 | preco_unitario | decimal | **Congelado** no momento do pedido |
 | observacao | varchar | "sem cebola", "bem passado" |
 
@@ -145,3 +147,9 @@ stateDiagram-v2
 
 Depois de `pronto` não há cancelamento: o prato existe e o custo já foi incorrido. Qualquer
 outra transição é recusada pela API com HTTP 400.
+
+## Persistência adicionada na revisão
+
+Pedido.acompanhamento é um UUID único gerado pelo servidor; chave_idempotencia é um UUID opcional único por tentativa. A migração preenche os pedidos existentes individualmente antes de exigir o acompanhamento.
+
+Configuracao armazena a marca em JSON por slug da instalação. Memoria armazena texto, autor e data; somente administrador grava. WebsocketTicket registra UUID, usuário e expiração e é consumido atomicamente antes do handshake autenticado. O token DRF usa sua data de criação para o prazo de sessão configurado.

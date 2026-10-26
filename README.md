@@ -1,205 +1,48 @@
 # SmartFood
 
-Sistema de gestão para restaurantes desenvolvido como Trabalho de Conclusão de Curso.
-Um único sistema atende três públicos: o **cliente** no totem da mesa, a **cozinha** e a
-**administração**.
+Gestão de pedidos para restaurantes, com cardápio do cliente, fila da cozinha e painel administrativo. Revisão de entrega em 09/10/2026.
 
-<p>
-  <img alt="Django" src="https://img.shields.io/badge/Django-5.1-092E20?logo=django&logoColor=white">
-  <img alt="DRF" src="https://img.shields.io/badge/DRF-3.15-A30000">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-000000?logo=next.js">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
-</p>
+## Executar a apresentação local
 
-## Stack
+Requer Python 3.12 ou superior e Node 22 ou superior.
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Backend | Django 5 + Django REST Framework |
-| Banco | PostgreSQL 16 (porta **5433** no host, para não conflitar com instalações locais) |
-| Realtime | Django Channels + Redis (WebSocket da cozinha) |
-| Frontend | Next.js 14 (App Router) + TypeScript |
-| Estado remoto | TanStack Query |
-| IA | Groq (OpenAI-compat), chamada por route handler do Next |
-| Orquestração | Docker Compose |
-
-## Como rodar
-
-### Stack completa (recomendado)
-
-```bash
-cp .env.example .env      # preencha SECRET_KEY e, se for usar a IA, GROQ_API_KEY
-docker compose up --build
+```sh
+sh scripts/apresentacao.sh
 ```
 
-| Serviço | Endereço |
-|---------|----------|
-| Frontend | http://localhost:3000 |
-| API | http://localhost:8000/api/v1/ |
-| Swagger UI | http://localhost:8000/api/v1/docs/ |
-| ReDoc | http://localhost:8000/api/v1/redoc/ |
+Site: http://127.0.0.1:3100. API: http://127.0.0.1:8100/api/v1. Login: admin. A senha gerada fica no campo DEMO_PASSWORD de `backend/.env` e não aparece em logs. O script não redefine credenciais de um admin já existente.
 
-### Separado
+O cardápio oficial mantém 54 cadastros e 24 fotos específicas. Produtos sem foto funcional ficam ocultos do cliente e da lista administrativa padrão. O administrador pode exibir esses cadastros para adicionar fotos. Nenhum histórico de pedido é apagado por essa regra.
 
-```bash
-# backend
+## O que mudou
+
+Interface de entrada, cardápio e dashboard refeita; busca e ordenação; carrinho com revisão; acompanhamento do preparo; navegação no celular; QR por mesa; upload de fotos; marca salva no banco. Pedidos começam recebidos e usam chave de tentativa para evitar duplicação. Receita e ticket são agregados no servidor. Sessões expiram e o WebSocket usa ticket temporário.
+
+O assistente consulta dados reais da API e usa Groq quando configurada no servidor. Sem provedor, o assistente local se identifica e responde consultas de cardápio e operação. Novas memórias exigem administrador e persistem no banco. Uma instalação atende um restaurante.
+
+## Validação
+
+49 testes do backend e 12 do assistente/cardápio passaram. O build de produção e a integração local foram executados. Confira o resultado em [análise e entrega](docs/09-auditoria-rap-e-entrega.md) e [evidência de integração](docs/evidencias/smoke.json).
+
+```sh
 cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py seed_demo    # cardápio, salão e usuário da equipe
-python manage.py runserver
+.venv/bin/python manage.py test
+```
 
-# frontend
+```sh
 cd frontend
-npm install
-npm run dev
+npm test
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-## Estrutura
+## Vercel e produção
 
-```
-backend/            projeto Django "smartfood"
-  apps/categorias/  categorias do cardápio
-  apps/produtos/    itens do cardápio (FK categoria, upload de imagem)
-  apps/mesas/       mesas do salão, status e QR code automático
-  apps/pedidos/     pedido, itens, fila da cozinha, WebSocket e seed
-frontend/           Next.js 14 (App Router)
-  src/app/          páginas: /, /totem, /cozinha, /admin/*
-  src/lib/api.ts    client axios e helpers por recurso
-  src/lib/ia/       persona, snapshot do banco e cérebro da conta
-  src/lib/auth/     sessão da equipe (token)
-  cerebro/          vault Obsidian: memória de longo prazo da IA, isolada por conta
-```
+Atualize primeiro o backend com as migrações e depois faça o novo deploy do frontend, com Root Directory `frontend`. Variáveis, HTTPS, banco, mídia persistente e Docker de produção estão em [implantação](docs/07-implantacao.md).
 
-## Telas
+Esta revisão não republicou nem confirmou o site online. A chamada real à Groq precisa de validação com a chave da implantação. A inspeção visual foi bloqueada pela ferramenta de navegador. O Docker de produção não foi executado porque o daemon estava desligado.
 
-| Rota | Público |
-|------|---------|
-| `/` | Entrada, escolhe o ambiente |
-| `/totem` | Cliente na mesa: cardápio, carrinho e Chef IA |
-| `/cozinha` | Fila de preparo |
-| `/admin` | Painel de gestão |
-| `/admin/cardapio` | CRUD de produtos e categorias |
-| `/admin/mesas` | Salão, status e QR |
-| `/admin/ia` | Assistente com os dados do restaurante |
-| `/admin/personalizacao` | White-label e conta ativa |
+## Defesa
 
-## API
-
-Todos os recursos ficam sob `/api/v1/`, com paginação de 20 itens, busca, filtros e
-ordenação. A documentação é gerada por `drf-spectacular`.
-
-| Recurso | Endpoint |
-|---------|----------|
-| Categorias | `/api/v1/categorias/` |
-| Produtos | `/api/v1/produtos/` |
-| Mesas | `/api/v1/mesas/` |
-| Pedidos | `/api/v1/pedidos/` |
-| Avançar pedido | `POST /api/v1/pedidos/{id}/status/` |
-| Autenticação | `/api/v1/auth/login/`, `/logout/`, `/eu/` |
-| Fila ao vivo | `ws://<host>/ws/cozinha/?token=<chave>` |
-
-### Acesso
-
-Leitura do cardápio e criação de pedido são públicas: quem pede é o cliente na mesa, que
-não tem conta. Todo o resto exige token da equipe. Detalhes em [docs/05-api.md](docs/05-api.md).
-
-## IA com cérebro por conta
-
-A IA responde a partir de três camadas: a **persona** do modo (`admin` ou `totem`), o
-**cérebro da conta** (vault Obsidian em `frontend/cerebro/Contas/<slug>/`) e um **snapshot ao vivo**
-do banco. Em conflito de preço ou disponibilidade, o banco tem precedência.
-
-Cada conta tem memória própria e isolada: identidade, diretrizes, cardápio comentado,
-operação e memórias datadas. A conta ativa é escolhida em **Admin → Personalização**, e é
-possível ensinar algo novo à IA em **Admin → Assistente IA → Ensinar ao cérebro**.
-
-| Rota interna | Função |
-|--------------|--------|
-| `POST /api/ia/chat` | Chat com o cérebro da conta injetado |
-| `GET /api/ia/contas` | Contas que possuem cérebro no vault |
-| `POST /api/ia/memoria` | Grava um aprendizado na memória da conta |
-
-A chave da Groq vive apenas no servidor: o navegador nunca fala com a API do modelo.
-
-## Estado atual
-
-Implementado e funcionando de ponta a ponta:
-
-- CRUD de categorias, produtos e mesas (API + telas)
-- **Pedido completo**: o totem grava no banco, a cozinha trabalha a fila e o admin
-  acompanha receita, ticket médio e histórico
-- Máquina de estados do pedido validada no servidor: não pula etapa, não volta
-- Preço congelado no item: reajuste de cardápio não reescreve venda antiga
-- **Tempo real** na cozinha por WebSocket, com busca periódica como rede de segurança
-- **Autenticação por token**, com escrita fechada e totem público
-- 22 testes automatizados do núcleo
-- Documentação automática da API e [documentação técnica](docs/)
-- Personalização white-label por conta
-- Assistente de IA com dados reais e cérebro por conta
-
-Fora do escopo desta versão:
-
-- Pagamento e emissão fiscal
-- Controle de estoque
-- Teste automatizado de interface
-- Múltiplas unidades por conta
-
-## Deploy na Vercel
-
-A Vercel hospeda o **frontend**. Django, PostgreSQL e Redis precisam de outro provedor
-(Render, Railway, Fly.io), porque a Vercel não roda processos persistentes com banco.
-
-Ao importar o repositório em [vercel.com/new](https://vercel.com/new):
-
-| Campo | Valor |
-|-------|-------|
-| Framework Preset | Next.js (detectado) |
-| **Root Directory** | `frontend` |
-| Build Command | padrão (`next build`) |
-
-Variáveis de ambiente do projeto na Vercel:
-
-| Variável | Valor |
-|----------|-------|
-| `GROQ_API_KEY` | sua chave da Groq (obrigatória para a IA) |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` |
-| `CEREBRO_CONTA_PADRAO` | `smartfood-demo` |
-| `NEXT_PUBLIC_API_URL` | URL pública da API Django, quando existir |
-| `INTERNAL_API_URL` | a mesma URL, usada pelo servidor do Next |
-
-O vault do cérebro fica em `frontend/cerebro/` justamente para viajar junto no deploy. As
-rotas de IA leem esses arquivos em tempo de execução, então o `next.config.js` declara
-`outputFileTracingIncludes` para incluí-los no bundle serverless.
-
-Sem um backend público, o site sobe funcionando: a IA responde com o cérebro da conta e
-avisa com transparência que os dados ao vivo do restaurante estão indisponíveis.
-
-## Variáveis de ambiente
-
-Veja [.env.example](.env.example). As principais:
-
-| Variável | Para quê |
-|----------|----------|
-| `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` | Django |
-| `DB_*` ou `DATABASE_URL` | Banco (a `DATABASE_URL` tem prioridade) |
-| `NEXT_PUBLIC_API_URL` | URL da API vista pelo navegador |
-| `INTERNAL_API_URL` | URL da API vista pelo servidor do Next |
-| `GROQ_API_KEY`, `GROQ_MODEL` | IA |
-| `CEREBRO_DIR`, `CEREBRO_CONTA_PADRAO` | Vault do cérebro |
-| `REDIS_URL` | Camada de canal do WebSocket (sem ela, cai para memória) |
-| `NEXT_PUBLIC_WS_URL` | Base do WebSocket vista pelo navegador |
-| `DEMO_PASSWORD` | Senha do usuário criado por `seed_demo` |
-
-## Documentação técnica
-
-Requisitos, arquitetura com as decisões de projeto, modelo de dados, casos de uso, API,
-testes e implantação estão em [docs/](docs/).
-
-## Testes
-
-```bash
-cd backend
-python manage.py test
-```
+[ roteiro e perguntas da banca](docs/10-roteiro-defesa.md). Os slides estão em `output/SmartFood-Defesa-TCC.pptx`. Pagamento, emissão fiscal, estoque e múltiplas unidades ficam fora do escopo. Revise dados oficiais da banca, capturas de tela, referências e vídeos com os autores.

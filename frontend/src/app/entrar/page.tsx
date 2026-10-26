@@ -14,7 +14,8 @@ function Formulario() {
   const { brand } = useBrand()
   const router = useRouter()
   const params = useSearchParams()
-  const destino = params.get('destino') || '/admin'
+  const candidato = params.get('destino') || '/admin'
+  const destino = /^\/(admin|cozinha|produtos|categorias|mesas)(\/|$)/.test(candidato) && !candidato.includes('\\') ? candidato : '/admin'
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')

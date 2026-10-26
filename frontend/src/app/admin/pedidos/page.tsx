@@ -7,7 +7,7 @@ import {
   ClipboardList, DollarSign, TrendingUp, Users,
   CheckCircle, Clock, XCircle, ChefHat, Bell, WifiOff,
 } from 'lucide-react'
-import { pedidosApi } from '@/lib/api'
+import { indicadoresApi, pedidosApi } from '@/lib/api'
 import type { PaginatedResponse, Pedido, PedidoStatus } from '@/types'
 
 const STATUS_CFG: Record<PedidoStatus, { label: string; badgeCls: string; icon: React.ReactNode }> = {
@@ -41,12 +41,6 @@ function hora(iso: string): string {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
-function ehHoje(iso: string): boolean {
-  const d = new Date(iso)
-  const hoje = new Date()
-  return d.toDateString() === hoje.toDateString()
-}
-
 export default function PedidosPage() {
   const [filtro, setFiltro] = useState<Filtro>('todos')
 
@@ -58,26 +52,15 @@ export default function PedidosPage() {
 
   const pedidos = useMemo(() => data?.results ?? [], [data])
 
-  // Faturamento só conta pedido entregue: pedido em preparo ainda pode ser cancelado.
-  const stats = useMemo(() => {
-    const doDia = pedidos.filter(p => ehHoje(p.criado_em))
-    const entregues = doDia.filter(p => p.status === 'entregue')
-    const receita = entregues.reduce((s, p) => s + Number(p.total), 0)
-    const mesas = new Set(doDia.map(p => p.mesa)).size
-    return {
-      receita,
-      pedidosHoje: doDia.length,
-      ticket: entregues.length ? receita / entregues.length : 0,
-      mesas,
-    }
-  }, [pedidos])
+  const indicadores = useQuery({ queryKey: ['indicadores'], queryFn: indicadoresApi.obter, refetchInterval: 15000 })
+  const stats = { receita: Number(indicadores.data?.receita ?? 0), pedidosHoje: indicadores.data?.pedidos_hoje ?? 0, ticket: Number(indicadores.data?.ticket_medio ?? 0), mesas: indicadores.data?.mesas_atendidas ?? 0 }
 
   const filtrados = filtro === 'todos' ? pedidos : pedidos.filter(p => p.status === filtro)
 
   const CARTOES = [
     { icon: DollarSign,    label: 'Receita hoje',      value: brl(stats.receita),   color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.28)' },
     { icon: ClipboardList, label: 'Pedidos hoje',      value: String(stats.pedidosHoje), color: '#7b2eff', bg: 'rgba(123,46,255,0.12)', border: 'rgba(123,46,255,0.28)' },
-    { icon: TrendingUp,    label: 'Ticket médio',      value: brl(stats.ticket),    color: '#00e0b8', bg: 'rgba(0,224,184,0.12)', border: 'rgba(0,224,184,0.28)' },
+    { icon: TrendingUp,    label: 'Ticket médio',      value: brl(stats.ticket),    color: 'var(--ok)', bg: 'rgba(0,224,184,0.12)', border: 'rgba(0,224,184,0.28)' },
     { icon: Users,         label: 'Mesas atendidas',   value: String(stats.mesas),  color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.28)' },
   ]
 
@@ -88,7 +71,7 @@ export default function PedidosPage() {
         <p className="page-sub">Histórico e status dos pedidos, direto do banco</p>
       </motion.div>
 
-      {isError && (
+      {(isError || indicadores.isError) && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '12px 16px', borderRadius: 12, marginBottom: 20,
@@ -110,7 +93,7 @@ export default function PedidosPage() {
               <div className="stat-icon" style={{ background: s.bg, color: s.color, border: `2px solid ${s.border}`, boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
                 <Icon size={19} strokeWidth={1.75} />
               </div>
-              <div className="stat-number" style={{ fontSize: '1.65rem' }}>{isLoading ? '...' : s.value}</div>
+              <div className="stat-number" style={{ fontSize: '1.65rem' }}>{indicadores.isLoading ? '…' : indicadores.isError ? '—' : s.value}</div>
               <div className="stat-label">{s.label}</div>
             </motion.div>
           )
@@ -178,7 +161,7 @@ export default function PedidosPage() {
                       {p.itens.map(i => `${i.produto_nome} x${i.quantidade}`).join(', ')}
                     </div>
                   </td>
-                  <td style={{ fontWeight: 800, color: '#00e0b8', fontSize: 15 }}>
+                  <td style={{ fontWeight: 800, color: 'var(--ok)', fontSize: 15 }}>
                     {brl(Number(p.total))}
                   </td>
                   <td style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>{hora(p.criado_em)}</td>

@@ -34,12 +34,14 @@ LOCAL_APPS = [
     "apps.produtos",
     "apps.mesas",
     "apps.pedidos",
+    "apps.restaurante",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -75,14 +77,14 @@ _url_is_valid = _database_url and "[" not in _database_url and "SUA-SENHA" not i
 
 if _url_is_valid:
     _is_sqlite = _database_url.startswith("sqlite")
-    DATABASES = {"default": dj_database_url.parse(_database_url, conn_max_age=600, ssl_require=not _is_sqlite)}
+    DATABASES = {"default": dj_database_url.parse(_database_url, conn_max_age=600, ssl_require=config("DB_SSL_REQUIRE", default=not _is_sqlite, cast=bool))}
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": config("DB_NAME", default="smartfood"),
             "USER": config("DB_USER", default="smartfood"),
-            "PASSWORD": config("DB_PASSWORD", default="smartfood123"),
+            "PASSWORD": config("DB_PASSWORD", default=""),
             "HOST": config("DB_HOST", default="db"),
             "PORT": config("DB_PORT", default="5432"),
         }
@@ -146,10 +148,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEMO_PASSWORD = config("DEMO_PASSWORD", default="")
 
 REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"anon": "120/min", "user": "600/min", "login": "10/min", "ia_anon": "20/min", "ia_user": "60/min"},
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # Token para a equipe (totem e cardápio continuam de leitura pública).
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "smartfood.authentication.ExpiringTokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -186,3 +190,24 @@ CORS_ALLOWED_ORIGINS = [
 # durante a fase de testes: o Chrome exige este header no preflight de Private
 # Network Access. Sem efeito quando a origem não é rede privada.
 CORS_ALLOW_PRIVATE_NETWORK = True
+
+# Uma instalação atende um restaurante. A seleção de conta não é autorização.
+RESTAURANTE_CONTA = config("CEREBRO_CONTA_PADRAO", default="smartfood-demo")
+DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=not DEBUG, cast=bool)
+SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0 if DEBUG else 31536000, cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in config("CSRF_TRUSTED_ORIGINS", default="").split(",") if x.strip()]
+CORS_ALLOW_PRIVATE_NETWORK = DEBUG
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": _redis_url}} if _redis_url and _alcancavel(_redis_url) else {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+LOGGING = {"version": 1, "disable_existing_loggers": False, "handlers": {"console": {"class": "logging.StreamHandler"}}, "root": {"handlers": ["console"], "level": "INFO"}}
+
+STORAGES = {"default": {"BACKEND": "django.core.files.storage.FileSystemStorage"}, "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}}
+
+TOKEN_TTL_HOURS = config("TOKEN_TTL_HOURS", default=24, cast=int)

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { categoriasApi, produtosApi } from '@/lib/api'
+import { fotoCardapio } from '@/lib/cardapio'
 import { imagemUrl, onImagemErro } from '@/lib/imagem'
 import type { Categoria, Produto, PaginatedResponse } from '@/types'
 import { Modal } from '@/components/Modal'
@@ -156,6 +157,8 @@ function CategoriasTab() {
 function ProdutosTab() {
   const qc = useQueryClient()
   const [form, setForm]     = useState<ProdForm>(EMPTY_PROD)
+  const [foto, setFoto] = useState<File | null>(null)
+  const [mostrarSemFoto, setMostrarSemFoto] = useState(false)
   const [editId, setEditId] = useState<number | null>(null)
   const [modal, setModal]   = useState(false)
 
@@ -163,7 +166,11 @@ function ProdutosTab() {
   const { data: catData }    = useQuery<PaginatedResponse<Categoria>>({ queryKey: ['categorias'], queryFn: categoriasApi.listar })
 
   const salvar = useMutation({
-    mutationFn: () => editId ? produtosApi.atualizar(editId, form) : produtosApi.criar(form),
+    mutationFn: () => {
+      let dados: ProdForm | FormData = form
+      if (foto) { const fd = new FormData(); Object.entries(form).forEach(([k,v]) => fd.append(k,String(v))); fd.append('imagem',foto); dados=fd }
+      return editId ? produtosApi.atualizar(editId, dados) : produtosApi.criar(dados)
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['produtos'] }); toast.success(editId ? 'Produto atualizado!' : 'Produto criado!'); close() },
     onError:   () => toast.error('Erro ao salvar produto.'),
   })
@@ -175,13 +182,15 @@ function ProdutosTab() {
   })
 
   function open(p?: Produto) {
+    setFoto(null)
     setForm(p ? { nome: p.nome, descricao: p.descricao, preco: p.preco, categoria: String(p.categoria), disponivel: p.disponivel, tempo_preparo: String(p.tempo_preparo) } : EMPTY_PROD)
     setEditId(p?.id ?? null)
     setModal(true)
   }
   function close() { setModal(false); setForm(EMPTY_PROD); setEditId(null) }
 
-  const produtos   = data?.results ?? []
+  const todos = data?.results ?? []
+  const produtos = mostrarSemFoto ? todos : todos.filter(p => fotoCardapio(p))
   const categorias = catData?.results ?? []
 
   return (
@@ -194,6 +203,7 @@ function ProdutosTab() {
         <button onClick={() => open()} className="btn btn-primary"><Plus size={15} /> Novo produto</button>
       </div>
 
+      <label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--text-secondary)',marginBottom:20}}><input type="checkbox" checked={mostrarSemFoto} onChange={e => setMostrarSemFoto(e.target.checked)}/> Mostrar também os {todos.filter(p => !fotoCardapio(p)).length} cadastros sem foto (ocultos no totem)</label>
       {isLoading && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
           {[1,2,3,4].map(i => <div key={i} className="glass-static" style={{ padding: 22, height: 160 }}><div className="skeleton" style={{ height: 14, width: '55%', marginBottom: 10 }} /><div className="skeleton" style={{ height: 28, width: '35%', marginBottom: 14 }} /></div>)}
@@ -216,7 +226,7 @@ function ProdutosTab() {
             {produtos.map(prod => (
               <motion.div key={prod.id} variants={cardAnim} exit="exit" layout className="glass" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ height: 140, flexShrink: 0, background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--border)' }}>
-                  <img src={imagemUrl(prod.imagem)} onError={onImagemErro} alt={prod.nome} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <img src={imagemUrl(fotoCardapio(prod))} onError={onImagemErro} alt={prod.nome} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
                 <div style={{ padding: 22, display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -234,7 +244,7 @@ function ProdutosTab() {
                 <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, color: '#111111', letterSpacing: '-0.03em', marginBottom: 6 }}>{prod.nome}</h3>
                 {prod.descricao && <p style={{ fontSize: 12, color: 'rgba(17,17,17,0.58)', lineHeight: 1.6, marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prod.descricao}</p>}
                 <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 900, color: '#00e0b8', letterSpacing: '-0.04em' }}>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 900, color: 'var(--ok)', letterSpacing: '-0.04em' }}>
                     R$ {Number(prod.preco).toFixed(2)}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'rgba(17,17,17,0.45)' }}>
@@ -252,6 +262,7 @@ function ProdutosTab() {
         footer={<><button onClick={close} className="btn btn-ghost btn-sm">Cancelar</button><button onClick={() => salvar.mutate()} disabled={salvar.isPending || !form.nome.trim() || !form.preco || !form.categoria} className="btn btn-primary btn-sm">{salvar.isPending ? 'Salvando...' : editId ? 'Salvar' : 'Criar'}</button></>}
       >
         <form onSubmit={e => { e.preventDefault(); salvar.mutate() }}>
+          <div className="form-row"><label className="label">Foto do produto (PNG, JPEG ou WebP, até 5 MB)</label><input className="field" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const f=e.target.files?.[0]; if (f && f.size>5*1024*1024) { toast.error('A foto deve ter até 5 MB.'); e.target.value=''; return } setFoto(f??null) }}/><p style={{fontSize:11,color:'var(--text-secondary)',marginTop:8}}>Produtos sem foto funcional ficam ocultos no cardápio do cliente.</p></div>
           <div className="form-row">
             <label className="label">Nome *</label>
             <input className="field" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Frango Grelhado" required />
