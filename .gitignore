@@ -56,3 +56,6 @@ skills-lock.json
 
 # Artefatos intermediários da revisão
 .artifact-build/
+
+# Logs do scripts/publicar.sh
+.publicar/

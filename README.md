@@ -12,6 +12,8 @@ sh scripts/apresentacao.sh
 
 Site: http://127.0.0.1:3100. API: http://127.0.0.1:8100/api/v1. Login: admin. A senha gerada fica no campo DEMO_PASSWORD de `backend/.env` e não aparece em logs. O script não redefine credenciais de um admin já existente.
 
+Publicação: `sh scripts/publicar.sh` deixa https://smart-food-tcc-4k2l.vercel.app funcionando a partir deste Mac (backend e Ollama locais, túnel HTTPS da Cloudflare). Detalhes em `docs/07-implantacao.md`.
+
 O cardápio oficial tem 24 itens em 6 categorias, todos com foto específica. Os 30 itens que não tinham foto saíram do cardápio: o `seed_menu` os apaga de bancos já populados e, se algum já tiver sido vendido, apenas o deixa indisponível para preservar o histórico. Produtos cadastrados depois sem foto funcional continuam ocultos do cliente até receberem imagem.
 
 ## O que mudou

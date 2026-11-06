@@ -1,5 +1,18 @@
 # Implantação do SmartFood
 
+## Publicação atual: túnel a partir do Mac
+
+O site público é https://smart-food-tcc-4k2l.vercel.app. O backend (Django em modo produção, SQLite) e o Ollama rodam no Mac do projeto e chegam à Vercel por túneis HTTPS gratuitos da Cloudflare. Um único comando faz tudo:
+
+```sh
+sh scripts/apresentacao.sh   # só na primeira vez, para instalar; depois pare com Ctrl+C
+sh scripts/publicar.sh       # deixe o terminal aberto durante o uso
+```
+
+O `publicar.sh` aplica migrações e o cardápio, sobe o backend com `DEBUG=False`, abre os túneis, atualiza `NEXT_PUBLIC_API_URL`, `INTERNAL_API_URL`, `NEXT_PUBLIC_WS_URL`, `OLLAMA_URL`, `OLLAMA_MODEL` e `OLLAMA_API_KEY` na Vercel e republica o site. O endereço do túnel muda a cada execução, por isso o script sempre republica. O Ollama fica atrás de `scripts/ollama-proxy.mjs`, que exige a chave `OLLAMA_PROXY_KEY` (guardada em `backend/.env`), só aceita `POST /api/chat` e força o modelo configurado.
+
+Limites: o sistema só funciona com o Mac ligado, o Ollama aberto e o script rodando. Para ficar no ar 24 h, publique o backend numa nuvem (seções abaixo) e use Ollama Cloud ou Groq na Vercel.
+
 O frontend já publicado na Vercel precisa receber uma nova versão para usar as alterações. Esta revisão não republicou a produção nem verificou sua URL. O backend deve ser atualizado antes do frontend, pois as novas interfaces dependem das rotas de indicadores, configuração, memória, acompanhamento e tickets de WebSocket.
 
 ## Vercel
