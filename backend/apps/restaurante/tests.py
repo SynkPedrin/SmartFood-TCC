@@ -86,6 +86,28 @@ class EntregaTests(APITestCase):
         self.assertEqual(self.client.post('/api/v1/ia/acesso/',{'mode':'admin'},format='json').status_code,401)
         self.assertEqual(self.client.post('/api/v1/ia/acesso/',{'mode':'totem'},format='json').status_code,200)
 
+    def test_ia_admin_e_memorias_sao_exclusivos_do_administrador(self):
+        self.client.force_authenticate(self.equipe)
+        self.assertEqual(self.client.post('/api/v1/ia/acesso/',{'mode':'admin'},format='json').status_code,403)
+        self.assertEqual(self.client.get('/api/v1/ia/memorias/').status_code,403)
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(self.client.post('/api/v1/ia/acesso/',{'mode':'admin'},format='json').status_code,200)
+
+    def test_excluir_com_historico_responde_409(self):
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(self.client.delete(f'/api/v1/categorias/{self.cat.pk}/').status_code,409)
+        self.assertTrue(Categoria.objects.filter(pk=self.cat.pk).exists())
+
+    def test_produto_de_categoria_inativa_nao_entra_no_pedido(self):
+        self.cat.ativo=False; self.cat.save()
+        self.assertEqual(self.client.post('/api/v1/pedidos/',self.dados(),format='json').status_code,400)
+        self.assertFalse(Pedido.objects.exists())
+
+    def test_mesas_filtram_por_status(self):
+        Mesa.objects.create(numero=2,status='manutencao')
+        r=self.client.get('/api/v1/mesas/?status=manutencao')
+        self.assertEqual([m['numero'] for m in r.data['results']],[2])
+
     def test_ia_recusa_outra_conta(self):
         self.client.force_authenticate(self.admin)
         self.assertEqual(self.client.post('/api/v1/ia/acesso/',{'mode':'admin','conta':'sushi-yama'},format='json').status_code,403)
@@ -175,3 +197,23 @@ class EntregaTests(APITestCase):
         ticket=WebsocketTicket.objects.create(usuario=self.equipe,expira_em=timezone.now()+timedelta(seconds=30))
         self.assertEqual(async_to_sync(_usuario_do_ticket)(str(ticket.pk)).pk,self.equipe.pk)
         self.assertIsNone(async_to_sync(_usuario_do_ticket)(str(ticket.pk)))
+
+
+class CardapioOficialTests(APITestCase):
+    def test_seed_menu_so_cadastra_itens_com_foto_e_retira_os_demais(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from apps.produtos.management.commands.seed_menu import PRODUTOS
+        pizzas = Categoria.objects.create(nome='Pizzas')
+        vendida = Produto.objects.create(nome='Feijoada', slug='feijoada', preco=Decimal('44.90'), categoria=pizzas)
+        Produto.objects.create(nome='Pudim', slug='pudim', preco=Decimal('14.90'), categoria=pizzas)
+        mesa = Mesa.objects.create(numero=1)
+        pedido = Pedido.objects.create(mesa=mesa)
+        ItemPedido.objects.create(pedido=pedido, produto=vendida, quantidade=1, preco_unitario=Decimal('44.90'))
+        call_command('seed_menu', stdout=StringIO())
+        self.assertTrue(all(foto for *_, foto in PRODUTOS))
+        self.assertFalse(Produto.objects.filter(slug='pudim').exists())
+        vendida.refresh_from_db(); pizzas.refresh_from_db()
+        self.assertFalse(vendida.disponivel)
+        self.assertFalse(pizzas.ativo)
+        self.assertEqual(Produto.objects.filter(disponivel=True).exclude(imagem='').count(), len(PRODUTOS))

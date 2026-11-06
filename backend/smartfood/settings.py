@@ -151,6 +151,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {"anon": "120/min", "user": "600/min", "login": "10/min", "ia_anon": "20/min", "ia_user": "60/min"},
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "smartfood.excecoes.tratar_excecao",
     # Token para a equipe (totem e cardápio continuam de leitura pública).
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "smartfood.authentication.ExpiringTokenAuthentication",

@@ -4,7 +4,7 @@
  * Sem foto, o cardápio cai no placeholder local.
  */
 /** Origem do backend (sem o /api/v1): base para fotos e links para a documentação. */
-export const API_ORIGEM = (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1')
+export const API_ORIGEM = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1')
   .replace(/\/api\/v1\/?$/, '')
 
 export const IMAGEM_FALLBACK = '/images/menu/default-food.svg'

@@ -18,7 +18,7 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
         read_only_fields = ("preco_unitario",)
 
     def validate_produto(self, produto):
-        if not produto.disponivel:
+        if not produto.disponivel or not produto.categoria.ativo:
             raise serializers.ValidationError(f'O produto "{produto.nome}" está indisponível.')
         return produto
 

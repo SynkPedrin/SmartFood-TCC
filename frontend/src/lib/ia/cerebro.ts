@@ -21,6 +21,12 @@ const CACHE_MS = 15_000
 /** Ordem de leitura: identidade antes de detalhe, detalhe antes de memória. */
 const ORDEM = ['Conta', 'Identidade', 'Diretrizes', 'Cardapio', 'Operacao']
 
+/**
+ * Conhecimento compartilhado em `Sistema/`, lido por todas as contas depois da
+ * conta e das memórias: é o que corta primeiro quando o teto aperta.
+ */
+const ORDEM_SISTEMA = ['IA e Cerebro', 'Glossario', 'Arquitetura', 'Backend', 'Frontend', 'White-label', 'Design System']
+
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/
 
 export interface ContaMeta {
@@ -42,6 +48,7 @@ export interface Cerebro {
   conta: ContaMeta
   secoes: SecaoCerebro[]
   memorias: SecaoCerebro[]
+  sistema: SecaoCerebro[]
 }
 
 /* ────────────────────────────── localização do vault ───────────────────────── */
@@ -207,7 +214,13 @@ async function lerCerebro(slug: string): Promise<Cerebro | null> {
     if (doc?.corpo) memorias.push({ titulo: f.replace(/\.md$/, ''), texto: doc.corpo })
   }
 
-  return { conta: metaToConta(slug, conta.meta), secoes, memorias }
+  const sistema: SecaoCerebro[] = []
+  for (const nome of ORDEM_SISTEMA) {
+    const doc = await lerDoc(path.join(root, 'Sistema', `${nome}.md`))
+    if (doc?.corpo) sistema.push({ titulo: nome, texto: doc.corpo })
+  }
+
+  return { conta: metaToConta(slug, conta.meta), secoes, memorias, sistema }
 }
 
 /* ──────────────────────────── serialização pro prompt ──────────────────────── */
@@ -244,6 +257,7 @@ export function cerebroToContext(c: Cerebro): string {
 
   for (const s of c.secoes) empilha('CÉREBRO', s)
   for (const m of c.memorias) empilha('MEMÓRIA', m)
+  for (const s of c.sistema) empilha('SISTEMA', s)
 
   return partes.join('')
 }

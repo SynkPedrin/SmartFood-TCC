@@ -106,7 +106,7 @@ export default function ChefIA({
                 <small>
                   {fonte === "local"
                     ? "Consulta local ao cardápio"
-                    : fonte === "groq"
+                    : fonte === "ollama" || fonte === "groq"
                       ? "IA conectada ao cardápio"
                       : "Ajuda para escolher seu pedido"}
                 </small>

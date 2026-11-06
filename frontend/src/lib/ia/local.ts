@@ -182,6 +182,30 @@ function filtros(q: string): RegExp[] {
   }
   return out;
 }
+/**
+ * Pares comida + bebida cujo total cabe no orçamento, já somados. Modelos pequenos
+ * erram a soma; com a lista pronta, o modelo só escolhe.
+ */
+export function combinacoes(produtos: ProdutoSnapshot[], limite: number): string[] {
+  const comidas = produtos.filter((p) => !bebida(p) && !sobremesa(p));
+  return comidas
+    .flatMap((c) =>
+      produtos
+        .filter(bebida)
+        .map((b) => ({ c, b, total: Number(c.preco) + Number(b.preco) })),
+    )
+    .filter((x) => x.total <= limite)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 12)
+    .map((x) => `${x.c.nome} + ${x.b.nome} = ${brl(String(x.total))}`);
+}
+/** Orçamento pedido pelo cliente ("até R$ 25", "menos de 30"), ou null. */
+export function orcamento(texto: string): number | null {
+  const m = normalizar(texto).match(
+    /(?:ate|menos de|maximo)\s*(?:r\$\s*)?(\d+(?:[.,]\d{1,2})?)/,
+  );
+  return m ? Number(m[1].replace(",", ".")) : null;
+}
 export function respostaLocal(
   mode: "admin" | "totem",
   pergunta: string,
@@ -284,13 +308,9 @@ export function respostaLocal(
   else if (/prato|comer|comida|peixe|frango|carne|burger|hamburguer/.test(q))
     produtos = produtos.filter((p) => !bebida(p) && !sobremesa(p));
 
-  const limite = q.match(
-    /(?:ate|menos de|maximo)\s*(?:r\$\s*)?(\d+(?:[.,]\d{1,2})?)/,
-  );
-  if (limite)
-    produtos = produtos.filter(
-      (p) => Number(p.preco) <= Number(limite[1].replace(",", ".")),
-    );
+  const limite = orcamento(q);
+  if (limite !== null)
+    produtos = produtos.filter((p) => Number(p.preco) <= limite);
   let consulta = q;
   const exclusoes: string[] = [];
   consulta = consulta.replace(
@@ -347,7 +367,7 @@ export function respostaLocal(
     (nota
       ? nota + "\n\n"
       : "Opções do cardápio" +
-        (limite ? ` até ${brl(limite[1].replace(",", "."))}` : "") +
+        (limite !== null ? ` até ${brl(String(limite))}` : "") +
         ":\n\n") +
     produtos
       .slice(0, 3)

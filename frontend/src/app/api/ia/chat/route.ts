@@ -3,7 +3,7 @@ import { loadSnapshot, snapshotToContext } from "@/lib/ia/context";
 import { carregarCerebro, cerebroToContext } from "@/lib/ia/cerebro";
 import { systemPrompt } from "@/lib/ia/prompts";
 import { autorizar, authHeaders, lerJSON } from "@/lib/ia/server";
-import { respostaLocal } from "@/lib/ia/local";
+import { combinacoes, orcamento, respostaLocal } from "@/lib/ia/local";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -73,51 +73,160 @@ export async function POST(req: NextRequest) {
       ),
       { headers: { ...headers, "X-Assistente": "local" } },
     );
-  if (!process.env.GROQ_API_KEY || !snapshot.online) return local();
-  let groqRes: Response;
+  if (!snapshot.online) return local();
+  // Com orçamento, o modelo só enxerga o que cabe nele: instrução no prompt não
+  // impedia modelos pequenos de citar itens mais caros.
+  const limite =
+    mode === "totem" ? orcamento(history[history.length - 1].content) : null;
+  const visivel =
+    limite === null
+      ? snapshot
+      : {
+          ...snapshot,
+          produtos: snapshot.produtos.filter((p) => Number(p.preco) <= limite),
+        };
+  const mensagens = [
+    {
+      role: "system",
+      content: systemPrompt(
+        mode,
+        snapshotToContext(visivel) +
+          (limite === null
+            ? ""
+            : `\nCOMBINAÇÕES QUE CABEM NO ORÇAMENTO DE ${limite} REAIS (comida + bebida, total já somado):\n` +
+              (combinacoes(visivel.produtos, limite).join("\n") ||
+                "nenhuma combinação de comida e bebida cabe neste valor")),
+        memoria,
+      ),
+    },
+    ...history,
+  ];
+  // Ollama é o motor principal; a Groq entra só se estiver configurada e o Ollama falhar.
+  for (const motor of motores()) {
+    const res = await chamar(motor, mensagens);
+    if (res)
+      return new Response(traduzir(motor, res), {
+        headers: { ...headers, "X-Assistente": motor.nome },
+      });
+  }
+  return local();
+}
+
+interface Motor {
+  nome: "ollama" | "groq";
+  url: string;
+  modelo: string;
+  chave?: string;
+}
+
+function motores(): Motor[] {
+  const lista: Motor[] = [];
+  const ollama = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
+  if (process.env.OLLAMA_MODEL || process.env.OLLAMA_URL)
+    lista.push({
+      nome: "ollama",
+      url: `${ollama.replace(/\/$/, "")}/api/chat`,
+      modelo: process.env.OLLAMA_MODEL || "qwen3.5:9b",
+      // Só o Ollama Cloud (https://ollama.com) exige chave; o local não.
+      chave: process.env.OLLAMA_API_KEY,
+    });
+  if (process.env.GROQ_API_KEY)
+    lista.push({
+      nome: "groq",
+      url: "https://api.groq.com/openai/v1/chat/completions",
+      modelo: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      chave: process.env.GROQ_API_KEY,
+    });
+  return lista;
+}
+
+function corpo(motor: Motor, messages: unknown[]) {
+  if (motor.nome === "ollama")
+    return {
+      model: motor.modelo,
+      messages,
+      stream: true,
+      // Sem "thinking": o modelo responde direto em vez de raciocinar antes.
+      think: false,
+      // O contexto padrão do Ollama (4k) cortaria o cérebro e o cardápio.
+      options: { num_ctx: 16384, temperature: 0.2, num_predict: 1200 },
+      keep_alive: "2h",
+    };
+  return {
+    model: motor.modelo,
+    // Modelos de raciocínio gastam o max_tokens pensando; esforço baixo deixa espaço para a resposta.
+    ...(motor.modelo.startsWith("openai/gpt-oss")
+      ? { reasoning_effort: "low", include_reasoning: false }
+      : {}),
+    messages,
+    temperature: 0.2,
+    max_tokens: 1200,
+    stream: true,
+  };
+}
+
+async function chamar(
+  motor: Motor,
+  messages: unknown[],
+): Promise<ReadableStream<Uint8Array> | null> {
+  // O prazo vale até a primeira resposta; o stream em si pode durar mais.
+  const prazo = new AbortController();
+  const timer = setTimeout(() => prazo.abort(), 45000);
   try {
-    groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const res = await fetch(motor.url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json",
+        ...(motor.chave ? { Authorization: `Bearer ${motor.chave}` } : {}),
       },
-      body: JSON.stringify({
-        model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt(mode, snapshotToContext(snapshot), memoria),
-          },
-          ...history,
-        ],
-        temperature: 0.2,
-        max_tokens: 1024,
-        stream: true,
-      }),
-      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify(corpo(motor, messages)),
+      signal: prazo.signal,
     });
-  } catch {
-    return local();
+    if (res.ok && res.body) return res.body;
+    // Sem isto a queda para o próximo motor fica invisível (ex.: 413 por limite de tokens).
+    console.error(
+      `[ia] ${motor.nome} ${res.status} (${motor.modelo}):`,
+      (await res.text().catch(() => "")).slice(0, 300),
+    );
+  } catch (e) {
+    console.error(`[ia] ${motor.nome} sem resposta:`, (e as Error).message);
+  } finally {
+    clearTimeout(timer);
   }
-  if (!groqRes.ok || !groqRes.body) return local();
+  return null;
+}
+
+/** Converte o stream do motor (NDJSON no Ollama, SSE na Groq) em texto puro. */
+function traduzir(motor: Motor, body: ReadableStream<Uint8Array>) {
   const encoder = new TextEncoder(),
     decoder = new TextDecoder();
-  const reader = groqRes.body.getReader();
-  const stream = new ReadableStream<Uint8Array>({
+  const reader = body.getReader();
+  const pedaco = (line: string): unknown => {
+    const texto = line.trim();
+    if (motor.nome === "ollama") {
+      if (!texto) return;
+      const data = JSON.parse(texto);
+      if (data.error) throw new Error(data.error);
+      return data.message?.content;
+    }
+    if (!texto.startsWith("data:")) return;
+    const data = texto.slice(5).trim();
+    if (data === "[DONE]") return;
+    return JSON.parse(data).choices?.[0]?.delta?.content;
+  };
+  return new ReadableStream<Uint8Array>({
     async start(controller) {
       let buffer = "";
       const processar = (line: string) => {
-        if (!line.trim().startsWith("data:")) return;
-        const data = line.trim().slice(5).trim();
-        if (data === "[DONE]") return;
+        let delta: unknown;
         try {
-          const delta = JSON.parse(data).choices?.[0]?.delta?.content;
-          if (typeof delta === "string")
-            controller.enqueue(encoder.encode(delta));
-        } catch {
-          /* keep-alive */
+          delta = pedaco(line);
+        } catch (e) {
+          if (e instanceof SyntaxError) return; /* keep-alive */
+          throw e; // erro do motor no meio do stream
         }
+        if (typeof delta === "string" && delta)
+          controller.enqueue(encoder.encode(delta));
       };
       try {
         for (;;) {
@@ -142,8 +251,5 @@ export async function POST(req: NextRequest) {
     cancel() {
       return reader.cancel();
     },
-  });
-  return new Response(stream, {
-    headers: { ...headers, "X-Assistente": "groq" },
   });
 }

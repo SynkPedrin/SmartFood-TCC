@@ -8,10 +8,16 @@ conta: smartfood-demo
 > [!warning] Preço e disponibilidade vêm do banco, não daqui.
 > Este arquivo guarda o que o banco não sabe: intenção, história e critério.
 
-## Estrutura pretendida
+## Estrutura atual
 
-Categorias esperadas nesta conta de demonstração: Entradas, Pratos principais,
-Bebidas, Sobremesas. Categoria vazia é lacuna a apontar, não erro a esconder.
+O cardápio oficial tem 24 itens em 6 categorias: Entradas, Burgers, Sobremesas,
+Bebidas, Combos e Infantil. Todos têm foto própria.
+
+Pizzas, Pratos, Massas e Saladas saíram do cardápio porque não tinham foto: o totem
+não mostra prato com imagem genérica. Voltam quando houver foto real. Se alguém
+perguntar por eles, a resposta é que não estão no cardápio hoje.
+
+Sobremesas tem um único item (Sorvete). É a lacuna mais visível do cardápio.
 
 ## Critérios de descrição
 
@@ -21,16 +27,18 @@ Bebidas, Sobremesas. Categoria vazia é lacuna a apontar, não erro a esconder.
 - Não promete "o melhor da cidade" nem usa superlativo.
 
 Modelo aprovado:
-> Frango grelhado na chapa com limão siciliano, alho e azeite. Acompanha arroz soltinho e salada verde.
+> Hambúrguer artesanal grelhado, queijo derretido e maionese da casa no pão de gergelim tostado.
 
 ## Faixas de preço de referência
 
 | Categoria | Faixa usual |
 |-----------|-------------|
-| Entradas | R$ 18 a R$ 35 |
-| Pratos principais | R$ 38 a R$ 75 |
-| Bebidas | R$ 8 a R$ 28 |
-| Sobremesas | R$ 16 a R$ 30 |
+| Entradas | R$ 17 a R$ 30 |
+| Burgers | R$ 24 a R$ 38 |
+| Sobremesas | R$ 12 a R$ 25 |
+| Bebidas | R$ 4 a R$ 13 |
+| Combos | R$ 39 a R$ 75 |
+| Infantil | R$ 19 a R$ 25 |
 
 Produto fora da faixa não é problema: é pergunta. A IA pergunta o porquê antes de sugerir corte.
 

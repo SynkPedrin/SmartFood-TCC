@@ -23,7 +23,7 @@ flowchart TB
 
     banco[(PostgreSQL)]
     redis[(Redis<br/>camada de canal)]
-    groq[Groq API<br/>modelo de linguagem]
+    ollama[Ollama<br/>modelo de linguagem qwen3.5:9b]
     vault[/cerebro/<br/>referência somente leitura/]
 
     totem --> paginas
@@ -35,12 +35,12 @@ flowchart TB
     rotas -->|lê snapshot| api
     rotas -->|lê referência| vault
     rotas -->|memória e marca via API| api
-    rotas -->|prompt| groq
+    rotas -->|prompt| ollama
     api --> regras --> banco
     ws --- redis
 ```
 
-A chave da Groq nunca chega ao navegador: quem fala com o modelo é o servidor do Next.
+Quem fala com o modelo é sempre o servidor do Next: o navegador nunca acessa o Ollama, nem a Groq opcional usada como reserva, nem as chaves desses serviços.
 
 ## Fluxo de um pedido
 

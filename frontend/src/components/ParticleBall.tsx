@@ -51,6 +51,8 @@ export default function ParticleBall({ size = 44, thinking = false }: { size?: n
     let angulo = 0
     let raf = 0
     let t0 = performance.now()
+    // Com "reduzir movimento" a bola fica parada: desenha um quadro e não agenda o próximo.
+    const reduzir = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const frame = (now: number) => {
       const dt = Math.min((now - t0) / 16.7, 3)
@@ -109,7 +111,7 @@ export default function ParticleBall({ size = 44, thinking = false }: { size?: n
         ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.25 + frente * 0.75})`
         ctx.fill()
       }
-      raf = requestAnimationFrame(frame)
+      if (!reduzir) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
 

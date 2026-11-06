@@ -33,7 +33,7 @@ Cérebro
 
 - [[Arquitetura]] - visão geral do stack e do fluxo de dados
 - [[Backend]] - Django REST Framework, apps e endpoints
-- [[Frontend]] - Next.js 14 App Router, rotas e camada de dados
+- [[Frontend]] - Next.js 15 App Router, rotas e camada de dados
 - [[Design System]] - tokens, sombras, tipografia
 - [[IA e Cerebro]] - como a IA lê este vault
 - [[White-label]] - personalização por conta

@@ -7,7 +7,9 @@ export const TOKEN_KEY = "smartfood:token";
 export const api = axios.create({
   // 127.0.0.1 em vez de localhost: o runserver do Django escuta só em IPv4,
   // e o navegador tenta ::1 antes, o que atrasa ou derruba a primeira chamada.
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1",
+  // `||` e não `??`: variável definida mas vazia (como já aconteceu na Vercel) também
+  // cai no padrão, em vez de mandar as chamadas para o próprio site.
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1",
   timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
@@ -25,7 +27,13 @@ api.interceptors.request.use((config) => {
 // Token revogado ou expirado derruba a sessão local em vez de deixar a tela
 // tentando de novo para sempre.
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    // A API só responde JSON. HTML aqui é uma página do próprio site (API mal
+    // configurada): vira erro para as telas mostrarem indisponibilidade em vez de quebrar.
+    if (/text\/html/.test(String(r.headers["content-type"] ?? "")))
+      return Promise.reject(new Error("API indisponível: a resposta não veio do servidor do SmartFood."));
+    return r;
+  },
   (error) => {
     const naoAutorizado = error?.response?.status === 401;
     const ehLogin = String(error?.config?.url ?? "").includes("/auth/login/");

@@ -24,6 +24,9 @@ services:
     env_file: .env
     environment:
       DEBUG: "False"
+      # O proxy HTTPS redireciona o tráfego externo; aqui chegam também as chamadas
+      # internas do frontend (http://backend:8000), que não podem levar 301.
+      SECURE_SSL_REDIRECT: "False"
       DB_HOST: db
       DB_PORT: "5432"
       DB_SSL_REQUIRE: "False"
@@ -43,6 +46,8 @@ services:
     env_file: .env
     environment:
       INTERNAL_API_URL: http://backend:8000/api/v1
+    # Ollama roda no host; no Linux o nome precisa ser declarado.
+    extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["127.0.0.1:3000:3000"]
     depends_on: [backend]
 volumes:

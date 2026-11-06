@@ -17,7 +17,7 @@ let seq = 1
 const nextId = () => seq++
 
 /**
- * Hook de chat com streaming real via /api/ia/chat (Groq no servidor).
+ * Hook de chat com streaming real via /api/ia/chat (Ollama no servidor, Groq como reserva).
  * Consome o corpo da resposta como texto incremental e atualiza a bolha
  * do assistente em tempo real.
  */

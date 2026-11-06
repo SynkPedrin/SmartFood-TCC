@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from .models import Mesa
@@ -15,6 +16,6 @@ from .serializers import MesaSerializer
 class MesaViewSet(viewsets.ModelViewSet):
     queryset = Mesa.objects.all()
     serializer_class = MesaSerializer
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ["numero", "status", "capacidade"]
     filterset_fields = ["status"]

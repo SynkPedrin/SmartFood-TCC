@@ -1,52 +1,52 @@
 ---
 tipo: sistema
 titulo: IA e Cérebro
-atualizado: 2026-08-10
+atualizado: 2026-11-06
 ---
 
 # IA e Cérebro
 
-A IA do SmartFood roda na **Groq** (API compatível com OpenAI), chamada por um route
-handler do Next (`/api/ia/chat`, runtime Node). A chave `GROQ_API_KEY` nunca sai do servidor.
+A IA do SmartFood roda no **Ollama**, chamado por um route handler do Next
+(`/api/ia/chat`, runtime Node). O modelo padrão é `qwen3.5:9b`, rodando na própria
+máquina, sem custo por pergunta e sem limite de tokens por minuto. O mesmo código fala
+com o Ollama Cloud quando `OLLAMA_URL` aponta para a nuvem com `OLLAMA_API_KEY`.
+A Groq é opcional e só entra se o Ollama falhar.
 
-## As três fontes de contexto
-
-Cada resposta é montada com três camadas empilhadas no system prompt:
-
-1. **Persona** (`lib/ia/prompts.ts`) - `admin` ou `totem`. Define postura e limites.
-2. **Snapshot ao vivo** (`lib/ia/context.ts`) - produtos, categorias e mesas lidos do
-   Django na hora. Se o backend estiver fora, a IA avisa em vez de inventar.
-3. **Cérebro da conta** (`lib/ia/cerebro.ts`) - este vault. Identidade, diretrizes,
-   cardápio comentado, operação e memórias daquela conta específica.
+## As camadas de contexto
 
 ```
-system prompt = persona + snapshot(banco) + cérebro(vault da conta)
+system prompt = persona (modo) + cérebro (vault da conta) + dados ao vivo (banco)
 ```
 
-## Isolamento por conta
+1. **Persona** - `admin` ou `totem`. Define postura e limites.
+2. **Cérebro** - este vault: identidade, diretrizes, cardápio comentado, operação,
+   memórias datadas da conta e as notas compartilhadas de `Sistema/`.
+3. **Dados ao vivo** - produtos, categorias, mesas, indicadores do dia e notas
+   ensinadas pela equipe, lidos do Django na hora da pergunta.
 
-O corpo do POST leva `conta: "<slug>"`. O loader resolve **apenas**
-`cerebro/Contas/<slug>/` e recusa slug fora do formato `[a-z0-9-]`, então uma conta não
-consegue ler o cérebro de outra nem escapar da pasta.
+No totem a IA recebe só o nome do restaurante, o tom e o cardápio visível: nada de
+memória, operação ou assunto interno chega ao cliente.
 
-Se o slug não existir, a IA responde só com persona + snapshot: degradação limpa, sem erro.
+## Conta autorizada
 
-## Ordem de leitura dentro da conta
+O servidor Django define qual conta a instalação atende. Outra conta é recusada.
+Se o cérebro da conta não existir, a IA responde só com persona e dados ao vivo.
 
-`Conta.md` → `Identidade.md` → `Diretrizes.md` → `Cardapio.md` → `Operacao.md` →
-`Memoria/` (as mais recentes primeiro, limitadas). O texto total é cortado num teto de
-caracteres para não estourar o contexto: por isso **arquivo curto e específico** vale mais
-que arquivo longo.
+## Ensinar ao cérebro
 
-## A IA escrevendo no cérebro
-
-`POST /api/ia/memoria` com `{ conta, texto, titulo? }` acrescenta um item em
-`Contas/<slug>/Memoria/AAAA-MM-DD.md`. É append-only: aprendizado antigo nunca é
-reescrito. Na tela `/admin/ia` isso aparece como **Ensinar ao cérebro**.
+Em `/admin/ia`, **Ensinar ao cérebro** grava a nota no banco (`/api/v1/ia/memorias/`),
+com autor e data. Só administrador grava. A nota entra nas próximas respostas e
+sobrevive a novos deploys.
 
 ## Precedência quando há conflito
 
-Dado do **banco** ganha de dado do **cérebro**. Se o `Cardapio.md` diz que a lasanha custa
-R$ 48 e o banco diz R$ 52, vale R$ 52 e a IA deve sinalizar a divergência.
+Dado do **banco** ganha de dado do **cérebro**. Se uma nota diz um preço e o banco diz
+outro, vale o banco e a IA sinaliza a divergência.
+
+## Quando o motor falha
+
+Ordem de tentativa: Ollama, depois Groq (se houver chave). Se nenhum responder, ou se o
+banco estiver fora do ar, entra o assistente local, que se identifica e responde só o
+que dá para calcular dos dados.
 
 Ver também: [[Backend]], [[White-label]], [[Glossario]]

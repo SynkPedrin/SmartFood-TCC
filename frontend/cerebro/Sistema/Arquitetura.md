@@ -1,7 +1,7 @@
 ---
 tipo: sistema
 titulo: Arquitetura
-atualizado: 2026-08-10
+atualizado: 2026-11-06
 ---
 
 # Arquitetura
@@ -14,32 +14,29 @@ ambientes de trabalho sobre a mesma base de dados: **salão/totem**, **cozinha**
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Backend | Django + Django REST Framework |
-| Banco | PostgreSQL (exposto na porta **5433**, não 5432) |
-| Realtime | Django Channels + Redis (configurado, sem consumers ainda) |
-| Frontend | Next.js 14 (App Router) + TypeScript |
+| Backend | Django 5.2 + Django REST Framework, servido por Daphne (ASGI) |
+| Banco | PostgreSQL em produção, SQLite no desenvolvimento local |
+| Tempo real | Django Channels: WebSocket `/ws/cozinha/`, Redis em produção, memória no local |
+| Frontend | Next.js 15 (App Router) + TypeScript |
 | Dados no client | TanStack Query (staleTime 30s) |
-| IA | Groq (OpenAI-compat) via route handler do Next |
-| Orquestração | Docker Compose |
+| IA | Ollama (modelo local, padrão `qwen3.5:9b`) via route handler do Next; Groq opcional como reserva |
+| Orquestração | Docker Compose (desenvolvimento e produção) |
 
 ## Fluxo de uma requisição
 
 ```
 Browser → Next.js (App Router)
             ├── páginas React → axios → Django REST (/api/v1/…)
-            └── /api/ia/chat  → lê snapshot do Django
-                              → lê o cérebro da conta (vault Obsidian)
-                              → Groq (stream) → texto puro de volta pro client
+            ├── cozinha → ticket de 30 s → WebSocket /ws/cozinha/ → refaz a busca na API
+            └── /api/ia/chat  → autoriza a conta no Django
+                              → lê snapshot, indicadores e memórias do Django
+                              → lê o cérebro da conta (este vault)
+                              → Ollama (stream) → texto puro de volta pro client
 ```
 
-O client **nunca** fala com a Groq direto: a chave vive só no servidor.
-
-## Portas
-
-- Frontend: `http://localhost:3000`
-- API: `http://localhost:8000/api/v1/`
-- Swagger: `/api/v1/docs/` · ReDoc: `/api/v1/redoc/`
-- Postgres: `5433`
+O client **nunca** fala com o motor de IA direto: só o servidor do Next chama o Ollama
+(e a Groq, se configurada como reserva). Sem motor disponível, um assistente local
+identificado responde consultas simples de cardápio e indicadores.
 
 ## Configuração
 

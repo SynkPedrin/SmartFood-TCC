@@ -1,8 +1,12 @@
-"""Cadastra o cardápio oficial do SmartFood: 54 itens em 10 categorias.
+"""Cadastra o cardápio oficial do SmartFood: 24 itens em 6 categorias, todos com foto.
 
-Idempotente por slug: rodar duas vezes mantém 54 produtos, não 108.
+Idempotente por slug: rodar duas vezes mantém 24 produtos, não 48.
 As fotos vivem em frontend/public/images/menu/ (fonte versionada); o comando
 copia cada uma para MEDIA_ROOT/produtos/ para a API servir via ImageField.
+
+Itens que saíram do cardápio por não terem foto (RETIRADOS) são apagados de
+bancos já populados; os que já aparecem em pedidos ficam indisponíveis, porque
+o histórico de vendas protege o produto contra exclusão.
 
     python manage.py seed_menu
     python manage.py seed_menu --limpar   # apaga pedidos, produtos e categorias antes
@@ -31,18 +35,31 @@ FOTOS = next((p for p in _FOTOS_CANDIDATAS if p.is_dir()), _FOTOS_CANDIDATAS[0])
 CATEGORIAS = [
     ("Entradas", "Para começar, e para dividir na mesa."),
     ("Burgers", "Hambúrgueres artesanais grelhados na hora."),
-    ("Pizzas", "Massa de fermentação lenta, forno bem quente."),
-    ("Pratos", "Os clássicos do almoço e do jantar."),
-    ("Massas", "Massas frescas com molhos cozidos devagar."),
-    ("Saladas", "Leves, frescas e montadas na hora."),
     ("Sobremesas", "O final feliz da refeição."),
     ("Bebidas", "Geladas, naturais e o café de verdade."),
     ("Combos", "Prato, acompanhamento e bebida com preço fechado."),
     ("Infantil", "Porções do tamanho certo para a criançada."),
 ]
 
+# Categorias que ficaram sem nenhum item com foto.
+CATEGORIAS_RETIRADAS = ["Pizzas", "Pratos", "Massas", "Saladas"]
+
+# Slugs que saíram do cardápio oficial por falta de foto.
+RETIRADOS = [
+    "smash-burger", "burger-frango", "burger-vegetariano",
+    "pizza-margherita", "pizza-calabresa", "pizza-portuguesa", "pizza-frango-catupiry",
+    "pizza-quatro-queijos", "pizza-pepperoni", "pizza-chocolate",
+    "file-parmegiana", "file-grelhado", "frango-grelhado", "strogonoff-frango",
+    "feijoada", "contra-file-fritas", "peixe-grelhado",
+    "espaguete-bolonhesa", "fettuccine-alfredo", "penne-molho-tomate",
+    "lasanha-bolonhesa", "nhoque-molho-tomate",
+    "salada-caesar", "salada-tropical", "bowl-frango",
+    "petit-gateau", "brownie-sorvete", "pudim", "cheesecake-frutas-vermelhas",
+    "mousse-chocolate",
+]
+
 # (categoria, slug, nome, descrição, preço, minutos de preparo, disponível, foto)
-# foto = caminho relativo a frontend/public/images/menu/; None quando ainda não existe.
+# foto = caminho relativo a frontend/public/images/menu/. Item sem foto não entra.
 PRODUTOS = [
     # ─── Entradas ───
     ("Entradas", "batata-frita", "Batata Frita",
@@ -77,106 +94,8 @@ PRODUTOS = [
     ("Burgers", "duplo-cheddar", "Duplo Cheddar",
      "Dois hambúrgueres altos grelhados na chapa, camadas duplas de cheddar derretido e maionese especial no pão brioche.",
      "36.90", 18, True, "burgers/duplo-cheddar.webp"),
-    ("Burgers", "smash-burger", "Smash Burger",
-     "Carne prensada na chapa até formar crosta caramelizada, queijo americano, cebola e molho especial.",
-     "29.90", 15, True, None),
-    ("Burgers", "burger-frango", "Burger de Frango",
-     "Peito de frango grelhado e suculento, queijo, alface e maionese de ervas no pão tostado.",
-     "27.90", 15, True, None),
-    ("Burgers", "burger-vegetariano", "Burger Vegetariano",
-     "Hambúrguer de grão-de-bico e legumes grelhado, queijo, alface, tomate e maionese de ervas.",
-     "28.90", 15, True, None),
-
-    # ─── Pizzas ───
-    ("Pizzas", "pizza-margherita", "Pizza Margherita",
-     "Molho artesanal de tomate, muçarela, tomates frescos, manjericão e um fio de azeite.",
-     "49.90", 25, True, None),
-    ("Pizzas", "pizza-calabresa", "Pizza Calabresa",
-     "Molho de tomate, muçarela, calabresa fatiada e cebola roxa, finalizada com orégano.",
-     "46.90", 25, True, None),
-    ("Pizzas", "pizza-portuguesa", "Pizza Portuguesa",
-     "Presunto, muçarela, ovo cozido em fatias, cebola, azeitona e orégano sobre molho de tomate.",
-     "54.90", 28, True, None),
-    ("Pizzas", "pizza-frango-catupiry", "Pizza Frango com Catupiry",
-     "Frango desfiado temperado, catupiry cremoso e muçarela sobre molho de tomate.",
-     "52.90", 28, True, None),
-    ("Pizzas", "pizza-quatro-queijos", "Pizza Quatro Queijos",
-     "Muçarela, gorgonzola, catupiry e parmesão gratinado sobre molho de tomate artesanal.",
-     "56.90", 28, True, None),
-    ("Pizzas", "pizza-pepperoni", "Pizza Pepperoni",
-     "Molho de tomate, muçarela e rodelas generosas de pepperoni levemente apimentado.",
-     "57.90", 28, True, None),
-    ("Pizzas", "pizza-chocolate", "Pizza de Chocolate",
-     "Massa assada coberta com chocolate ao leite derretido e toque de chocolate meio amargo.",
-     "42.90", 20, True, None),
-
-    # ─── Pratos ───
-    ("Pratos", "file-parmegiana", "Filé à Parmegiana",
-     "Filé empanado coberto com molho artesanal de tomate e queijo gratinado, acompanhado de arroz branco e batatas fritas.",
-     "54.90", 35, True, None),
-    ("Pratos", "file-grelhado", "Filé Grelhado",
-     "Filé mignon grelhado no ponto, acompanhado de arroz branco e legumes salteados na manteiga.",
-     "49.90", 30, True, None),
-    ("Pratos", "frango-grelhado", "Frango Grelhado",
-     "Peito de frango grelhado na chapa com limão, alho e azeite. Acompanha arroz branco e salada verde.",
-     "39.90", 25, True, None),
-    ("Pratos", "strogonoff-frango", "Strogonoff de Frango",
-     "Cubos de frango ao molho cremoso de tomate com champignon, acompanhado de arroz branco e batata palha.",
-     "42.90", 25, True, None),
-    ("Pratos", "feijoada", "Feijoada",
-     "Feijão preto encorpado com carnes suínas e defumados, acompanhado de arroz, couve, laranja e farofa.",
-     "44.90", 30, True, None),
-    ("Pratos", "contra-file-fritas", "Contra-Filé com Fritas",
-     "Contra-filé grelhado na chapa, fatiado, com porção de batatas fritas crocantes e salada.",
-     "52.90", 30, True, None),
-    ("Pratos", "peixe-grelhado", "Peixe Grelhado",
-     "Filé de peixe branco grelhado com ervas e limão, acompanhado de arroz e legumes no vapor.",
-     "56.90", 30, True, None),
-
-    # ─── Massas ───
-    ("Massas", "espaguete-bolonhesa", "Espaguete à Bolonhesa",
-     "Espaguete al dente envolvido em molho bolonhesa cozido por horas, finalizado com parmesão ralado.",
-     "36.90", 20, True, None),
-    ("Massas", "fettuccine-alfredo", "Fettuccine Alfredo",
-     "Fettuccine fresco ao molho cremoso de manteiga e parmesão, com toque de noz-moscada.",
-     "39.90", 20, True, None),
-    ("Massas", "penne-molho-tomate", "Penne ao Molho de Tomate",
-     "Penne al dente ao molho artesanal de tomates maduros com manjericão fresco.",
-     "31.90", 18, True, None),
-    ("Massas", "lasanha-bolonhesa", "Lasanha à Bolonhesa",
-     "Camadas de massa fresca, bolonhesa, molho branco e queijo gratinado no forno.",
-     "42.90", 35, True, None),
-    ("Massas", "nhoque-molho-tomate", "Nhoque ao Molho de Tomate",
-     "Nhoque de batata macio ao molho de tomate caseiro e manjericão, com parmesão.",
-     "38.90", 22, False, None),
-
-    # ─── Saladas ───
-    ("Saladas", "salada-caesar", "Salada Caesar",
-     "Alface romana crocante, croutons artesanais, lascas de parmesão e molho caesar da casa.",
-     "32.90", 10, True, None),
-    ("Saladas", "salada-tropical", "Salada Tropical",
-     "Mix de folhas verdes com manga, abacaxi, tomate cereja e vinagrete cítrico.",
-     "28.90", 10, True, None),
-    ("Saladas", "bowl-frango", "Bowl de Frango",
-     "Bowl com frango grelhado em tiras, mix de folhas, grão-de-bico, tomate cereja e molho de iogurte.",
-     "34.90", 12, True, None),
 
     # ─── Sobremesas ───
-    ("Sobremesas", "petit-gateau", "Petit Gâteau",
-     "Bolo quente de chocolate com interior cremoso, acompanhado de sorvete de baunilha.",
-     "24.90", 12, True, None),
-    ("Sobremesas", "brownie-sorvete", "Brownie com Sorvete",
-     "Brownie de chocolate meio amargo aquecido, servido com bola de sorvete de creme e calda.",
-     "21.90", 10, True, None),
-    ("Sobremesas", "pudim", "Pudim",
-     "Pudim de leite condensado em fatia generosa, com calda de caramelo feita na casa.",
-     "14.90", 5, True, None),
-    ("Sobremesas", "cheesecake-frutas-vermelhas", "Cheesecake de Frutas Vermelhas",
-     "Cheesecake assado cremoso sobre base de biscoito, coberto com calda de frutas vermelhas.",
-     "22.90", 8, True, None),
-    ("Sobremesas", "mousse-chocolate", "Mousse de Chocolate",
-     "Mousse aerado de chocolate meio amargo, finalizado com raspas de chocolate.",
-     "16.90", 5, True, None),
     ("Sobremesas", "sorvete", "Sorvete",
      "Taça com três bolas de sorvete — creme, chocolate e morango — com chantilly e biscoito wafer.",
      "12.90", 5, True, "sobremesas/sorvete.webp"),
@@ -229,7 +148,7 @@ PRODUTOS = [
 
 
 class Command(BaseCommand):
-    help = "Cadastra o cardápio oficial do SmartFood (54 itens em 10 categorias)."
+    help = "Cadastra o cardápio oficial do SmartFood (24 itens em 6 categorias)."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -290,11 +209,28 @@ class Command(BaseCommand):
             else:
                 sem_foto += 1
 
+        # Retira do banco o que saiu do cardápio. Com histórico de vendas o produto
+        # não pode ser apagado (PROTECT), então só deixa de ser oferecido.
+        retirados = Produto.objects.filter(slug__in=RETIRADOS)
+        com_historico = retirados.filter(itens_pedido__isnull=False).distinct()
+        ocultos = com_historico.update(disponivel=False)
+        apagados, _ = retirados.exclude(pk__in=com_historico).delete()
+        for nome in CATEGORIAS_RETIRADAS:
+            categoria = Categoria.objects.filter(nome=nome).first()
+            if categoria is None:
+                continue
+            if categoria.produtos.exists():
+                categoria.ativo = False
+                categoria.save(update_fields=["ativo"])
+            else:
+                categoria.delete()
+
         self.stdout.write(
             self.style.SUCCESS(
                 f"Pronto: {Categoria.objects.count()} categorias, "
                 f"{Produto.objects.count()} produtos "
                 f"({criados} criados, {atualizados} atualizados, "
-                f"{com_foto} com foto, {sem_foto} sem foto)."
+                f"{com_foto} com foto, {sem_foto} sem foto; "
+                f"{apagados} retirados, {ocultos} ocultos por histórico)."
             )
         )

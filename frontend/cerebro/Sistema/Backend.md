@@ -1,7 +1,7 @@
 ---
 tipo: sistema
 titulo: Backend
-atualizado: 2026-08-10
+atualizado: 2026-11-06
 ---
 
 # Backend (Django REST Framework)
@@ -14,38 +14,31 @@ formato: `models.py → serializers.py → views.py → urls.py`.
 | App | Domínio |
 |-----|---------|
 | `apps.categorias` | Categorias do cardápio |
-| `apps.produtos` | Itens do cardápio (FK → Categoria, upload de imagem via Pillow) |
+| `apps.produtos` | Itens do cardápio, foto e carga do cardápio oficial (`seed_menu`) |
 | `apps.mesas` | Mesas do salão, com status e QR code automático |
+| `apps.pedidos` | Pedidos e itens, fila da cozinha, máquina de estados, WebSocket |
+| `apps.restaurante` | Marca, memória da IA, indicadores do dia, acompanhamento, saúde |
 
-Todos registram sob `api/v1/` em `backend/smartfood/urls.py`. A raiz `/` redireciona
-para o Swagger.
+Todos registram sob `api/v1/`. Documentação viva em `/api/v1/docs/` e `/api/v1/redoc/`.
 
 ## Modelos que a IA precisa conhecer
 
-**Produto**: `nome`, `descricao`, `preco` (decimal), `disponivel` (bool),
-`tempo_preparo` (minutos), `categoria` (FK), `imagem`.
-`__str__` = `"{nome} - R$ {preco}"`.
+**Produto**: `nome`, `slug`, `descricao`, `preco`, `disponivel`, `tempo_preparo`
+(minutos), `categoria`, `imagem`. Produto sem foto fica oculto no totem.
 
 **Categoria**: `nome`, `descricao`, `ativo`.
 
-**Mesa**: `numero` (único), `capacidade` (padrão 4), `status`, `qr_code`, timestamps.
-Status possíveis:
+**Mesa**: `numero` (único), `capacidade` (padrão 4), `status`, `qr_code` (`mesa-<numero>`).
+Status: disponível, ocupada, reservada, em manutenção.
 
-| Valor | Rótulo |
-|-------|--------|
-| `disponivel` | Disponível |
-| `ocupada` | Ocupada |
-| `reservada` | Reservada |
-| `manutencao` | Em Manutenção |
+**Pedido**: status Recebido → Em preparo → Pronto → Entregue. Cancelar só antes de
+Pronto. Preço de cada item congelado na venda. Abrir pedido ocupa a mesa; o último
+pedido entregue ou cancelado libera a mesa.
 
-O `qr_code` é gerado no `save()` como `mesa-<numero>` quando vazio.
+## Indicadores
 
-## Convenções DRF
-
-- Paginação global: **20 por página** (respostas vêm em `{ results: [...] }`).
-- `django-filter` + busca + ordenação habilitados globalmente.
-- OpenAPI via `drf-spectacular`.
-- Channels/Redis configurados (`ASGI_APPLICATION`, `CHANNEL_LAYERS`) para WebSocket futuro.
+Receita do dia soma só pedidos **entregues**, na data de Brasília. Não é pagamento
+confirmado: o sistema não tem módulo de pagamento.
 
 ## Regra para a IA
 

@@ -31,6 +31,8 @@ class AcessoIAView(APIView):
             return Response({"error": "Modo inválido."}, status=400)
         if modo == "admin" and not request.user.is_authenticated:
             return Response({"error": "Entre na área da equipe para usar o assistente."}, status=401)
+        if modo == "admin" and not request.user.is_staff:
+            return Response({"error": "O assistente de gestão é exclusivo do administrador."}, status=403)
         conta = request.data.get("conta") or settings.RESTAURANTE_CONTA
         if conta != settings.RESTAURANTE_CONTA:
             return Response({"error": "Conta não pertence a esta instalação."}, status=403)
@@ -47,15 +49,13 @@ class MemoriaSerializer(serializers.ModelSerializer):
 
 
 class MemoriasView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         notas = Memoria.objects.filter(conta=settings.RESTAURANTE_CONTA)[:30]
         return Response({"results": MemoriaSerializer(notas, many=True).data})
 
     def post(self, request):
-        if not request.user.is_staff:
-            return Response({"error": "Somente administradores podem ensinar ao assistente."}, status=403)
         if request.data.get("conta", settings.RESTAURANTE_CONTA) != settings.RESTAURANTE_CONTA:
             return Response({"error": "Conta inválida."}, status=403)
         entrada = MemoriaSerializer(data=request.data)

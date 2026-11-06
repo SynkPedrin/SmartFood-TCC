@@ -62,7 +62,7 @@ DRF is configured with `drf-spectacular` (OpenAPI), `django-filter`, pagination 
 
 **Realtime**: `apps/pedidos/consumers.py` serves `ws/cozinha/`, authenticated by the same token via query string. A `post_save` signal sends a short notice (id, status, novo) and the client refetches from the API, so the DB stays the single source of truth. `CHANNEL_LAYERS` picks Redis only if the host actually resolves, else falls back to in-memory - the compose `REDIS_URL` points at host `redis`, which does not exist outside Docker.
 
-Local dev without Docker: `DATABASE_URL="sqlite:///db.sqlite3"` and Python 3.9 + Django 4.2 in `backend/.venv-local`. Run `python manage.py seed_demo` to populate; it also creates user `admin`. For the full 54-item menu run `python manage.py seed_menu` (idempotent by `Produto.slug`); photos live in `frontend/public/images/menu/<categoria>/<slug>.webp` and the command copies them into `backend/media/produtos/` for the API to serve.
+Local dev without Docker: `DATABASE_URL="sqlite:///db.sqlite3"` with Python 3.12 (Django 5.2 needs ≥ 3.10; the old `backend/.venv-local` is Python 3.9 and no longer works). Run `python manage.py seed_demo` to populate; it also creates user `admin`. For the official 24-item menu (every item has a photo; items without photos were removed) run `python manage.py seed_menu` (idempotent by `Produto.slug`); photos live in `frontend/public/images/menu/<categoria>/<slug>.webp` and the command copies them into `backend/media/produtos/` for the API to serve.
 
 Config is 12-factor via `python-decouple`. `DATABASE_URL` takes priority over individual `DB_*` vars when present and valid.
 
@@ -112,9 +112,12 @@ Global CSS and ambient background orbs are in [frontend/src/app/globals.css](fro
 O loader é [frontend/src/lib/ia/cerebro.ts](frontend/src/lib/ia/cerebro.ts) (server-only,
 usa `fs`): localiza o vault via `CEREBRO_DIR` ou a partir do `cwd`, valida o slug
 contra `^[a-z0-9][a-z0-9-]*$` (impede path traversal), lê na ordem
-Conta → Identidade → Diretrizes → Cardapio → Operacao → últimas 5 memórias, corta em 12k
+Conta → Identidade → Diretrizes → Cardapio → Operacao → últimas 5 memórias → notas de `Sistema/`
+(só no modo admin; o totem recebe apenas nome e tom), corta em 12k
 caracteres e cacheia 15s.
 
+O motor é o Ollama (`OLLAMA_URL`, `OLLAMA_MODEL`, padrão `qwen3.5:9b`; API nativa `/api/chat` com
+`think: false` e `num_ctx` 16k), com a Groq como reserva opcional e o assistente local por último.
 O system prompt final é `persona (modo) + cérebro (conta) + snapshot (banco)`; em conflito
 de preço/disponibilidade **vale o banco**. A conta ativa é `brand.accountId`
 (localStorage), enviada como `conta` no POST de `/api/ia/chat`; a resposta traz o header
@@ -124,7 +127,7 @@ de preço/disponibilidade **vale o banco**. A conta ativa é `brand.accountId`
 |------|--------|
 | `POST /api/ia/chat` | Chat com cérebro da conta injetado |
 | `GET /api/ia/contas` | Lista contas que têm cérebro no vault |
-| `POST /api/ia/memoria` | Grava aprendizado em `Contas/<slug>/Memoria/` |
+| `POST /api/ia/memoria` | Grava aprendizado no banco (`/api/v1/ia/memorias/`, só staff); volta no snapshot do modo admin |
 
 Trocar de conta: **Admin → Personalização → Conta ativa**. Ensinar algo à IA:
 **Admin → Assistente IA → Ensinar ao cérebro**.

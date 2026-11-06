@@ -12,13 +12,13 @@ sh scripts/apresentacao.sh
 
 Site: http://127.0.0.1:3100. API: http://127.0.0.1:8100/api/v1. Login: admin. A senha gerada fica no campo DEMO_PASSWORD de `backend/.env` e não aparece em logs. O script não redefine credenciais de um admin já existente.
 
-O cardápio oficial mantém 54 cadastros e 24 fotos específicas. Produtos sem foto funcional ficam ocultos do cliente e da lista administrativa padrão. O administrador pode exibir esses cadastros para adicionar fotos. Nenhum histórico de pedido é apagado por essa regra.
+O cardápio oficial tem 24 itens em 6 categorias, todos com foto específica. Os 30 itens que não tinham foto saíram do cardápio: o `seed_menu` os apaga de bancos já populados e, se algum já tiver sido vendido, apenas o deixa indisponível para preservar o histórico. Produtos cadastrados depois sem foto funcional continuam ocultos do cliente até receberem imagem.
 
 ## O que mudou
 
 Interface de entrada, cardápio e dashboard refeita; busca e ordenação; carrinho com revisão; acompanhamento do preparo; navegação no celular; QR por mesa; upload de fotos; marca salva no banco. Pedidos começam recebidos e usam chave de tentativa para evitar duplicação. Receita e ticket são agregados no servidor. Sessões expiram e o WebSocket usa ticket temporário.
 
-O assistente consulta dados reais da API e usa Groq quando configurada no servidor. Sem provedor, o assistente local se identifica e responde consultas de cardápio e operação. Novas memórias exigem administrador e persistem no banco. Uma instalação atende um restaurante.
+O assistente consulta dados reais da API e gera as respostas com o Ollama (padrão `qwen3.5:9b`, configurado por `OLLAMA_URL` e `OLLAMA_MODEL`), com a Groq como reserva opcional. Sem motor disponível, o assistente local se identifica e responde consultas de cardápio e operação. Novas memórias exigem administrador e persistem no banco. Uma instalação atende um restaurante.
 
 ## Validação
 

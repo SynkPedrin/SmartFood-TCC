@@ -4,7 +4,7 @@ const fs=require('node:fs')
 const ts=require('typescript')
 require.extensions['.ts']=(m,file)=>m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true,resolveJsonModule:true}}).outputText,file)
 const {fotoCardapio}=require('../src/lib/cardapio.ts')
-const {respostaLocal}=require('../src/lib/ia/local.ts')
+const {respostaLocal,orcamento}=require('../src/lib/ia/local.ts')
 const {systemPrompt}=require('../src/lib/ia/prompts.ts')
 const snapshot={online:true,categorias:[],mesas:[],memorias:[],falhas:[],indicadores:null,produtos:[
  {id:1,nome:'X-Burger',slug:'x-burger',imagem:null,preco:'24.90',tempo_preparo:15,disponivel:true,categoria_detalhe:{nome:'Burgers'}},
@@ -44,3 +44,16 @@ test('pergunta explícita sobre peixe substitui preferência anterior',()=>{cons
 test('ranking administrativo é processado antes de resumo genérico',()=>{const t=respostaLocal('admin','Quais são os pratos mais pedidos?',{...alimentos,indicadores:{mais_vendidos:[{produto__nome:'Batata Frita',quantidade:7}]}});assert.match(t,/Batata Frita: 7 unidades/);assert.doesNotMatch(t,/undefined/)})
 test('exclusão de ingrediente não vira busca pelo ingrediente',()=>{const t=respostaLocal('totem','Quero um prato sem bacon',alimentos);assert.match(t,/não citam bacon/);assert.doesNotMatch(t,/Batata com Bacon|Água Mineral|Prato sem descrição/)})
 test('rótulo vegetariano contradito pela descrição não é recomendado',()=>{const t=respostaLocal('totem','Sem carne',{...alimentos,produtos:[{...alimentos.produtos[3],nome:'Burger Vegetariano com Bacon',descricao:'Hambúrguer vegetariano com bacon suíno.'}]});assert.match(t,/Não encontrei/);assert.doesNotMatch(t,/\*\*Burger/)})
+test('orçamento é lido da pergunta do cliente',()=>{
+ assert.equal(orcamento('Me indica algo até R$ 25?'),25)
+ assert.equal(orcamento('quero gastar no máximo 19,90'),19.9)
+ assert.equal(orcamento('menos de 30 reais'),30)
+ assert.equal(orcamento('quero um burger'),null)
+})
+test('combinações sugeridas cabem no orçamento',()=>{
+ const {combinacoes}=require('../src/lib/ia/local.ts')
+ const lista=combinacoes(snapshot.produtos.filter(p=>p.disponivel),35)
+ assert.ok(lista.length>0)
+ for(const c of lista){const v=Number(c.split('R$')[1].trim().replace('.','').replace(',','.'));assert.ok(v<=35,c)}
+ assert.deepEqual(combinacoes(snapshot.produtos,10),[])
+})

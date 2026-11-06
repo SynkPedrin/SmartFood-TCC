@@ -11,11 +11,13 @@ Root Directory: `frontend`. Build Command: `npm run build`. Use Node 22. O proje
 | NEXT_PUBLIC_API_URL | URL HTTPS da API terminando em /api/v1 |
 | INTERNAL_API_URL | A mesma API acessível ao servidor da Vercel |
 | NEXT_PUBLIC_WS_URL | Origem WSS do backend, sem /api/v1 |
-| GROQ_API_KEY | Chave privada do provedor, somente no servidor |
-| GROQ_MODEL | Modelo disponível na sua conta Groq |
+| OLLAMA_URL | Endereço do Ollama acessível ao servidor. Na Vercel, `https://ollama.com` (Ollama Cloud) ou um servidor próprio publicado; `localhost` não funciona lá |
+| OLLAMA_MODEL | Modelo do Ollama, por exemplo `qwen3.5:9b` (local) ou um modelo da nuvem |
+| OLLAMA_API_KEY | Somente para o Ollama Cloud, privada, no servidor |
+| GROQ_API_KEY / GROQ_MODEL | Opcionais: reserva usada se o Ollama falhar |
 | CEREBRO_CONTA_PADRAO | Slug autorizado no backend, por exemplo smartfood-demo |
 
-O cérebro Markdown viaja com a função como referência somente de leitura. Novas memórias são gravadas no banco Django, persistindo entre deploys. Sem serviço externo configurado, o assistente local se identifica e responde consultas de cardápio e indicadores. Uma falha da API deve aparecer como indisponibilidade, sem usar preços antigos para recomendar pratos.
+O cérebro Markdown viaja com a função como referência somente de leitura. Novas memórias são gravadas no banco Django, persistindo entre deploys. Sem motor de IA disponível, o assistente local se identifica e responde consultas de cardápio e indicadores. Uma falha da API deve aparecer como indisponibilidade, sem usar preços antigos para recomendar pratos.
 
 Atualize as variáveis e faça o novo deploy. NEXT_PUBLIC_* entra no build. Verifique fotos, login, pedido, fila, entrega, acompanhamento e indicadores usando as URLs públicas reais.
 

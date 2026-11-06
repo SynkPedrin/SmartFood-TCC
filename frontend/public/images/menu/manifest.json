@@ -39,25 +39,10 @@
     "category": "Burgers",
     "image": "/images/menu/burgers/bacon-burger.webp"
   },
-  "burger-vegetariano": {
-    "name": "Burger Vegetariano",
-    "category": "Burgers",
-    "image": null
-  },
-  "burger-frango": {
-    "name": "Burger de Frango",
-    "category": "Burgers",
-    "image": null
-  },
   "duplo-cheddar": {
     "name": "Duplo Cheddar",
     "category": "Burgers",
     "image": "/images/menu/burgers/duplo-cheddar.webp"
-  },
-  "smash-burger": {
-    "name": "Smash Burger",
-    "category": "Burgers",
-    "image": null
   },
   "x-burger": {
     "name": "X-Burger",
@@ -128,141 +113,6 @@
     "name": "Mini Macarrão",
     "category": "Infantil",
     "image": "/images/menu/infantil/mini-macarrao.webp"
-  },
-  "espaguete-bolonhesa": {
-    "name": "Espaguete à Bolonhesa",
-    "category": "Massas",
-    "image": null
-  },
-  "fettuccine-alfredo": {
-    "name": "Fettuccine Alfredo",
-    "category": "Massas",
-    "image": null
-  },
-  "lasanha-bolonhesa": {
-    "name": "Lasanha à Bolonhesa",
-    "category": "Massas",
-    "image": null
-  },
-  "nhoque-molho-tomate": {
-    "name": "Nhoque ao Molho de Tomate",
-    "category": "Massas",
-    "image": null
-  },
-  "penne-molho-tomate": {
-    "name": "Penne ao Molho de Tomate",
-    "category": "Massas",
-    "image": null
-  },
-  "pizza-calabresa": {
-    "name": "Pizza Calabresa",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-frango-catupiry": {
-    "name": "Pizza Frango com Catupiry",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-margherita": {
-    "name": "Pizza Margherita",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-pepperoni": {
-    "name": "Pizza Pepperoni",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-portuguesa": {
-    "name": "Pizza Portuguesa",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-quatro-queijos": {
-    "name": "Pizza Quatro Queijos",
-    "category": "Pizzas",
-    "image": null
-  },
-  "pizza-chocolate": {
-    "name": "Pizza de Chocolate",
-    "category": "Pizzas",
-    "image": null
-  },
-  "contra-file-fritas": {
-    "name": "Contra-Filé com Fritas",
-    "category": "Pratos",
-    "image": null
-  },
-  "feijoada": {
-    "name": "Feijoada",
-    "category": "Pratos",
-    "image": null
-  },
-  "file-grelhado": {
-    "name": "Filé Grelhado",
-    "category": "Pratos",
-    "image": null
-  },
-  "file-parmegiana": {
-    "name": "Filé à Parmegiana",
-    "category": "Pratos",
-    "image": null
-  },
-  "frango-grelhado": {
-    "name": "Frango Grelhado",
-    "category": "Pratos",
-    "image": null
-  },
-  "peixe-grelhado": {
-    "name": "Peixe Grelhado",
-    "category": "Pratos",
-    "image": null
-  },
-  "strogonoff-frango": {
-    "name": "Strogonoff de Frango",
-    "category": "Pratos",
-    "image": null
-  },
-  "bowl-frango": {
-    "name": "Bowl de Frango",
-    "category": "Saladas",
-    "image": null
-  },
-  "salada-caesar": {
-    "name": "Salada Caesar",
-    "category": "Saladas",
-    "image": null
-  },
-  "salada-tropical": {
-    "name": "Salada Tropical",
-    "category": "Saladas",
-    "image": null
-  },
-  "brownie-sorvete": {
-    "name": "Brownie com Sorvete",
-    "category": "Sobremesas",
-    "image": null
-  },
-  "cheesecake-frutas-vermelhas": {
-    "name": "Cheesecake de Frutas Vermelhas",
-    "category": "Sobremesas",
-    "image": null
-  },
-  "mousse-chocolate": {
-    "name": "Mousse de Chocolate",
-    "category": "Sobremesas",
-    "image": null
-  },
-  "petit-gateau": {
-    "name": "Petit Gâteau",
-    "category": "Sobremesas",
-    "image": null
-  },
-  "pudim": {
-    "name": "Pudim",
-    "category": "Sobremesas",
-    "image": null
   },
   "sorvete": {
     "name": "Sorvete",
