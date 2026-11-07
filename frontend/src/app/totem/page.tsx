@@ -37,6 +37,8 @@ import {
   Loader2,
 } from "lucide-react";
 type Item = { produto: Produto; qtd: number };
+/** Mesa escolhida nesta aba: recarregar a página não tira o cliente da mesa. */
+const MESA_KEY = "smartfood:mesa";
 const brl = (v: string | number) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const normalizar = (s: string) =>
@@ -106,19 +108,52 @@ export default function TotemPage() {
     queryKey: ["categorias"],
     queryFn: categoriasApi.listar,
   });
+  // Escolher a mesa já a ocupa no servidor: as outras telas veem na hora.
+  const sentar = useMutation({
+    mutationFn: (m: Mesa) => mesasApi.sentar(m.id),
+    onSuccess: (m: Mesa) => {
+      setMesa(m);
+      try {
+        sessionStorage.setItem(MESA_KEY, String(m.id));
+      } catch {
+        /* navegação privada */
+      }
+      qc.invalidateQueries({ queryKey: ["mesas"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(
+        (axios.isAxiosError(err) && err.response?.data?.detail) ||
+          "Não foi possível ocupar a mesa. Tente novamente.",
+      );
+      qc.invalidateQueries({ queryKey: ["mesas"] });
+    },
+  });
   useEffect(() => {
     if (selecionouQR.current || !mesaQuery.data) return;
-    const numero = new URLSearchParams(window.location.search).get("mesa");
     selecionouQR.current = true;
-    if (!numero) return;
+    // QR code da mesa tem prioridade; sem ele, recarregar a página mantém a mesa da sessão.
+    const numero = new URLSearchParams(window.location.search).get("mesa");
+    let salva: string | null = null;
+    try {
+      salva = sessionStorage.getItem(MESA_KEY);
+    } catch {
+      /* navegação privada */
+    }
+    if (!numero && !salva) return;
     const encontrada = mesaQuery.data.results.find(
       (m) =>
-        String(m.numero) === numero &&
+        (numero ? String(m.numero) === numero : String(m.id) === salva) &&
         ["disponivel", "ocupada"].includes(m.status),
     );
-    if (encontrada) Promise.resolve().then(() => setMesa(encontrada));
-    else toast.error("Mesa indisponível. Consulte o atendimento.");
-  }, [mesaQuery.data]);
+    if (encontrada) sentar.mutate(encontrada);
+    else if (numero) toast.error("Mesa indisponível. Consulte o atendimento.");
+  }, [mesaQuery.data, sentar]);
+  const pedidosDaMesa = useQuery({
+    queryKey: ["mesa-pedidos", mesa?.id],
+    queryFn: () => mesasApi.pedidos(mesa!.id),
+    enabled: !!mesa,
+    refetchInterval: 15000,
+  });
   useEffect(() => {
     if (!aberto) return;
     const esc = (e: KeyboardEvent) => {
@@ -215,6 +250,13 @@ export default function TotemPage() {
     enviar.mutate();
   }
   function sair() {
+    // Sem pedido em andamento a mesa volta a ficar livre; com pedido, o servidor a mantém ocupada.
+    if (mesa) mesasApi.liberar(mesa.id).catch(() => undefined);
+    try {
+      sessionStorage.removeItem(MESA_KEY);
+    } catch {
+      /* navegação privada */
+    }
     setMesa(null);
     setCart([]);
     setPedido(null);
@@ -258,7 +300,8 @@ export default function TotemPage() {
                 <button
                   key={m.id}
                   className="table-option"
-                  onClick={() => setMesa(m)}
+                  disabled={sentar.isPending}
+                  onClick={() => sentar.mutate(m)}
                 >
                   <span>MESA</span>
                   <strong>{String(m.numero).padStart(2, "0")}</strong>
@@ -274,8 +317,27 @@ export default function TotemPage() {
           !mesaQuery.data?.results.some((m) => m.status === "disponivel") && (
             <p>Nenhuma mesa livre no momento. Consulte o atendimento.</p>
           )}
+        {!!mesaQuery.data?.results.some((m) => m.status === "ocupada") && (
+          <div className="table-rejoin">
+            <span>Já está sentado? Entre na sua mesa:</span>
+            <div>
+              {mesaQuery.data.results
+                .filter((m) => m.status === "ocupada")
+                .map((m) => (
+                  <button
+                    key={m.id}
+                    className="btn btn-ghost"
+                    disabled={sentar.isPending}
+                    onClick={() => sentar.mutate(m)}
+                  >
+                    Mesa {String(m.numero).padStart(2, "0")}
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
         <small className="welcome-note">
-          Já está na mesa? Acesse pelo QR code para continuar pedindo.
+          Ou acesse pelo QR code da mesa para continuar pedindo.
         </small>
       </main>
     );
@@ -366,6 +428,20 @@ export default function TotemPage() {
             </div>
           </div>
         </section>
+        {!!pedidosDaMesa.data?.pedidos.length && (
+          <section className="table-orders" aria-live="polite">
+            <strong>Pedidos da mesa {String(mesa.numero).padStart(2, "0")}</strong>
+            {pedidosDaMesa.data.pedidos.map((p) => (
+              <div key={p.id}>
+                <span>
+                  #{p.id} ·{" "}
+                  {p.itens.map((i) => `${i.quantidade}× ${i.nome}`).join(", ")}
+                </span>
+                <em className={`status-${p.status}`}>{p.status_display}</em>
+              </div>
+            ))}
+          </section>
+        )}
         <div className="menu-toolbar">
           <label className="menu-search">
             <Search size={18} />

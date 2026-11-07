@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { NovoPedido, PedidoStatus } from "@/types";
+import type { Mesa, NovoPedido, PedidoStatus, PedidosDaMesa } from "@/types";
 
 /** Onde o token da equipe é guardado no navegador. */
 export const TOKEN_KEY = "smartfood:token";
@@ -79,6 +79,10 @@ export const mesasApi = {
   criar: (data: unknown) => api.post("/mesas/", data).then((r) => r.data),
   atualizar: (id: number, data: unknown) => api.patch(`/mesas/${id}/`, data).then((r) => r.data),
   excluir: (id: number) => api.delete(`/mesas/${id}/`),
+  // Totem: o cliente ocupa a mesa ao escolher, e a devolve se sair sem pedir.
+  sentar: (id: number) => api.post<Mesa>(`/mesas/${id}/sentar/`).then((r) => r.data),
+  liberar: (id: number) => api.post<Mesa>(`/mesas/${id}/liberar/`).then((r) => r.data),
+  pedidos: (id: number) => api.get<PedidosDaMesa>(`/mesas/${id}/pedidos/`).then((r) => r.data),
 };
 
 // Pedidos

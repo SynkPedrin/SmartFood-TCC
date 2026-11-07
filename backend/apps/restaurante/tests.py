@@ -217,3 +217,77 @@ class CardapioOficialTests(APITestCase):
         self.assertFalse(vendida.disponivel)
         self.assertFalse(pizzas.ativo)
         self.assertEqual(Produto.objects.filter(disponivel=True).exclude(imagem='').count(), len(PRODUTOS))
+
+
+class SalaoAoVivoTests(APITestCase):
+    def setUp(self):
+        self.cat = Categoria.objects.create(nome='Burgers')
+        self.prod = Produto.objects.create(nome='X-Burger', preco=Decimal('24.90'), categoria=self.cat)
+        self.mesa = Mesa.objects.create(numero=6)
+
+    def test_cliente_senta_e_mesa_fica_ocupada_para_todos(self):
+        r = self.client.post(f'/api/v1/mesas/{self.mesa.pk}/sentar/')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.client.get(f'/api/v1/mesas/{self.mesa.pk}/').data['status'], 'ocupada')
+        # Outro cliente na mesma mesa entra sem erro: a mesa continua ocupada.
+        self.assertEqual(self.client.post(f'/api/v1/mesas/{self.mesa.pk}/sentar/').status_code, 200)
+
+    def test_mesa_reservada_ou_em_manutencao_nao_aceita_cliente(self):
+        for status in ('reservada', 'manutencao'):
+            self.mesa.status = status; self.mesa.save()
+            self.assertEqual(self.client.post(f'/api/v1/mesas/{self.mesa.pk}/sentar/').status_code, 409)
+            self.mesa.refresh_from_db(); self.assertEqual(self.mesa.status, status)
+
+    def test_liberar_so_sem_pedido_em_andamento(self):
+        self.client.post(f'/api/v1/mesas/{self.mesa.pk}/sentar/')
+        pedido = self.client.post('/api/v1/pedidos/', {'mesa': self.mesa.pk, 'itens': [{'produto': self.prod.pk, 'quantidade': 1}]}, format='json').data
+        self.client.post(f'/api/v1/mesas/{self.mesa.pk}/liberar/')
+        self.mesa.refresh_from_db(); self.assertEqual(self.mesa.status, 'ocupada')
+        Pedido.objects.filter(pk=pedido['id']).update(status='entregue')
+        self.client.post(f'/api/v1/mesas/{self.mesa.pk}/liberar/')
+        self.mesa.refresh_from_db(); self.assertEqual(self.mesa.status, 'disponivel')
+
+    def test_cliente_ve_pedidos_abertos_da_mesa_sem_dados_internos(self):
+        self.client.post('/api/v1/pedidos/', {'mesa': self.mesa.pk, 'itens': [{'produto': self.prod.pk, 'quantidade': 2}]}, format='json')
+        r = self.client.get(f'/api/v1/mesas/{self.mesa.pk}/pedidos/')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['status'], 'ocupada')
+        self.assertEqual(r.data['pedidos'][0]['itens'], [{'nome': 'X-Burger', 'quantidade': 2}])
+        self.assertNotIn('acompanhamento', r.data['pedidos'][0])
+
+    def test_mudanca_de_mesa_pedido_e_cardapio_avisa_o_salao(self):
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+        camada = get_channel_layer()
+        canal = async_to_sync(camada.new_channel)()
+        async_to_sync(camada.group_add)('salao', canal)
+        receber = lambda: async_to_sync(camada.receive)(canal)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(f'/api/v1/mesas/{self.mesa.pk}/sentar/')
+        self.assertEqual((receber()['tipo'], ), ('mesa', ))
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post('/api/v1/pedidos/', {'mesa': self.mesa.pk, 'itens': [{'produto': self.prod.pk, 'quantidade': 1}]}, format='json')
+        tipos = {receber()['tipo']}
+        self.assertIn('pedido', tipos)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.prod.disponivel = False; self.prod.save()
+        evento = receber()
+        while evento['tipo'] != 'cardapio':
+            evento = receber()
+        self.assertEqual(evento['tipo'], 'cardapio')
+
+    def test_socket_do_salao_e_publico(self):
+        from asgiref.sync import async_to_sync
+        from channels.testing import WebsocketCommunicator
+        from apps.pedidos.consumers import SalaoConsumer
+
+        async def conectar():
+            com = WebsocketCommunicator(SalaoConsumer.as_asgi(), '/ws/salao/')
+            ok, _ = await com.connect()
+            primeira = await com.receive_json_from()
+            await com.disconnect()
+            return ok, primeira
+
+        ok, primeira = async_to_sync(conectar)()
+        self.assertTrue(ok)
+        self.assertEqual(primeira, {'tipo': 'conectado'})

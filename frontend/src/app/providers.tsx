@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrandProvider } from '@/lib/brand/BrandContext'
 import { AuthProvider } from '@/lib/auth/AuthContext'
+import { SalaoAoVivo } from '@/lib/salao/SalaoAoVivo'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SalaoAoVivo />
       {/* Respeita "reduzir movimento" do sistema: quem pediu menos animação
           recebe o estado final direto, sem transição. */}
       <MotionConfig reducedMotion="user">

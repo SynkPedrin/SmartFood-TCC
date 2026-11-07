@@ -64,3 +64,29 @@ class FilaConsumer(AsyncJsonWebsocketConsumer):
             "status": evento.get("status"),
             "novo": evento.get("novo", False),
         })
+
+
+GRUPO_SALAO = "salao"
+
+
+class SalaoConsumer(AsyncJsonWebsocketConsumer):
+    """Avisos públicos do salão: mesa, pedido ou cardápio mudou.
+
+    Sem login, porque o totem do cliente também precisa se atualizar. Por isso o
+    evento leva só tipo, identificador e status: nada de itens, valores ou dados
+    da equipe. Quem recebe busca o resto pela API, com as permissões de sempre.
+    """
+
+    async def connect(self):
+        await self.channel_layer.group_add(GRUPO_SALAO, self.channel_name)
+        await self.accept()
+        await self.send_json({"tipo": "conectado"})
+
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard(GRUPO_SALAO, self.channel_name)
+
+    async def receive_json(self, content, **kwargs):
+        """O canal é só de saída: o que o cliente mandar é ignorado."""
+
+    async def salao_mudou(self, evento):
+        await self.send_json({k: v for k, v in evento.items() if k != "type"})

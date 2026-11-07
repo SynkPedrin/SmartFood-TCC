@@ -33,6 +33,20 @@ export interface Mesa {
   atualizado_em: string;
 }
 
+/** Pedidos em andamento de uma mesa, na visão reduzida do cliente no totem. */
+export interface PedidosDaMesa {
+  mesa: number;
+  status: Mesa["status"];
+  pedidos: {
+    id: number;
+    status: PedidoStatus;
+    status_display: string;
+    criado_em: string;
+    total: string;
+    itens: { nome: string; quantidade: number }[];
+  }[];
+}
+
 export type PedidoStatus =
   | "recebido"
   | "preparando"
