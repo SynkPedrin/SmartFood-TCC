@@ -49,16 +49,17 @@ PRODUTOS = [
     ("Sobremesas", "Salada de frutas", "Frutas da estação picadas na hora.", "16.00", 8, True),
 ]
 
-# (número, capacidade, status)
+# (número, capacidade, status). Todas começam livres: reserva e manutenção são
+# decisões da equipe no dia, não estado de fábrica do salão.
 MESAS = [
     (1, 2, Mesa.Status.DISPONIVEL),
     (2, 2, Mesa.Status.DISPONIVEL),
     (3, 4, Mesa.Status.DISPONIVEL),
     (4, 4, Mesa.Status.DISPONIVEL),
-    (5, 4, Mesa.Status.RESERVADA),
+    (5, 4, Mesa.Status.DISPONIVEL),
     (6, 6, Mesa.Status.DISPONIVEL),
     (7, 6, Mesa.Status.DISPONIVEL),
-    (8, 8, Mesa.Status.MANUTENCAO),
+    (8, 8, Mesa.Status.DISPONIVEL),
 ]
 
 # Pedidos de exemplo: (mesa, status, [(produto, quantidade, observação)])
