@@ -135,11 +135,20 @@ export function snapshotToContext(s: RestaurantSnapshot): string {
       ].join(" | "),
     ),
   );
-  if (s.mesas.length)
+  if (s.mesas.length) {
+    // Contagem pronta: modelos pequenos erram ao contar a lista.
+    const total: Record<string, number> = {};
+    for (const m of s.mesas) total[m.status] = (total[m.status] ?? 0) + 1;
     lines.push(
-      "MESAS (número: status):",
-      s.mesas.map((m) => `${m.numero}: ${m.status}`).join("; "),
+      `MESAS: ${s.mesas.length} no total; ` +
+        Object.entries(total)
+          .map(([status, n]) => `${n} ${status}`)
+          .join(", ") +
+        ". Use estes totais ao responder quantas mesas há.",
+      "Detalhe (número: status): " +
+        s.mesas.map((m) => `${m.numero}: ${m.status}`).join("; "),
     );
+  }
   if (s.indicadores)
     lines.push(
       "INDICADORES DO DIA (receita = pedidos entregues, não pagamento confirmado):",
