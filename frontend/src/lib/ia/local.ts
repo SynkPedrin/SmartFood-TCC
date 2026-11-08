@@ -1,7 +1,7 @@
 import type { ProdutoSnapshot, RestaurantSnapshot } from "./context";
 const brl = (v: string) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const normalizar = (s: string) =>
+export const normalizar = (s: string) =>
   s
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

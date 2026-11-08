@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { loadSnapshot, snapshotToContext } from "@/lib/ia/context";
 import { carregarCerebro, cerebroToContext } from "@/lib/ia/cerebro";
-import { systemPrompt } from "@/lib/ia/prompts";
+import { nivelDaPergunta, systemPrompt } from "@/lib/ia/prompts";
+import { diagnosticar, diagnosticoToContext } from "@/lib/ia/diagnostico";
+import { respostaRapida } from "@/lib/ia/rapido";
 import { autorizar, authHeaders, lerJSON } from "@/lib/ia/server";
 import { combinacoes, orcamento, respostaLocal } from "@/lib/ia/local";
 export const runtime = "nodejs";
@@ -51,10 +53,12 @@ export async function POST(req: NextRequest) {
     loadSnapshot(mode, authHeaders(req), ids),
     carregarCerebro(acesso.conta!),
   ]);
+  const pergunta = history[history.length - 1].content;
+  const nivel = nivelDaPergunta(pergunta);
   // O totem nunca recebe notas internas, operação ou memória da equipe.
   const memoria = cerebro
     ? mode === "admin"
-      ? cerebroToContext(cerebro)
+      ? cerebroToContext(cerebro, { sistema: nivel.tecnica })
       : `Nome do restaurante: ${cerebro.conta.nome}. Tom: ${cerebro.conta.iaTom || "acolhedor"}.`
     : null;
   const headers = {
@@ -74,10 +78,17 @@ export async function POST(req: NextRequest) {
       { headers: { ...headers, "X-Assistente": "local" } },
     );
   if (!snapshot.online) return local();
+  const alertas = mode === "admin" ? diagnosticar(snapshot) : [];
+  // Pergunta de um dado só sai direto do banco, em milissegundos e sem erro de conta.
+  const rapida = respostaRapida(mode, pergunta, snapshot, alertas);
+  if (rapida)
+    return new Response(rapida, {
+      headers: { ...headers, "X-Assistente": "dados", "X-Nivel": "instantanea" },
+    });
   // Com orçamento, o modelo só enxerga o que cabe nele: instrução no prompt não
   // impedia modelos pequenos de citar itens mais caros.
   const limite =
-    mode === "totem" ? orcamento(history[history.length - 1].content) : null;
+    mode === "totem" ? orcamento(pergunta) : null;
   const visivel =
     limite === null
       ? snapshot
@@ -95,18 +106,23 @@ export async function POST(req: NextRequest) {
             ? ""
             : `\nCOMBINAÇÕES QUE CABEM NO ORÇAMENTO DE ${limite} REAIS (comida + bebida, total já somado):\n` +
               (combinacoes(visivel.produtos, limite).join("\n") ||
-                "nenhuma combinação de comida e bebida cabe neste valor")),
+                "nenhuma combinação de comida e bebida cabe neste valor")) +
+          (mode === "admin" ? `\n${diagnosticoToContext(alertas)}` : ""),
         memoria,
       ),
     },
     ...history,
   ];
   // Ollama é o motor principal; a Groq entra só se estiver configurada e o Ollama falhar.
-  for (const motor of motores()) {
-    const res = await chamar(motor, mensagens);
+  const lista = motores();
+  for (let i = 0; i < lista.length; i++) {
+    const motor = lista[i];
+    // Com reserva, não vale esperar muito: 20 s sem a primeira palavra e passa adiante.
+    const prazo = i < lista.length - 1 ? 20_000 : 45_000;
+    const res = await chamar(motor, mensagens, nivel.maxTokens, prazo);
     if (res)
       return new Response(traduzir(motor, res), {
-        headers: { ...headers, "X-Assistente": motor.nome },
+        headers: { ...headers, "X-Assistente": motor.nome, "X-Nivel": nivel.nivel },
       });
   }
   return local();
@@ -140,7 +156,7 @@ function motores(): Motor[] {
   return lista;
 }
 
-function corpo(motor: Motor, messages: unknown[]) {
+function corpo(motor: Motor, messages: unknown[], maxTokens: number) {
   if (motor.nome === "ollama")
     return {
       model: motor.modelo,
@@ -149,7 +165,8 @@ function corpo(motor: Motor, messages: unknown[]) {
       // Sem "thinking": o modelo responde direto em vez de raciocinar antes.
       think: false,
       // O contexto padrão do Ollama (4k) cortaria o cérebro e o cardápio.
-      options: { num_ctx: 16384, temperature: 0.2, num_predict: 1200 },
+      // O teto por nível mantém análises dentro do limite de 60 s da Vercel.
+      options: { num_ctx: 16384, temperature: 0.2, num_predict: maxTokens },
       keep_alive: "2h",
     };
   return {
@@ -160,7 +177,8 @@ function corpo(motor: Motor, messages: unknown[]) {
       : {}),
     messages,
     temperature: 0.2,
-    max_tokens: 1200,
+    // Modelos de raciocínio contam o raciocínio no teto: folga para não cortar a resposta.
+    max_tokens: maxTokens + 400,
     stream: true,
   };
 }
@@ -168,10 +186,12 @@ function corpo(motor: Motor, messages: unknown[]) {
 async function chamar(
   motor: Motor,
   messages: unknown[],
+  maxTokens: number,
+  prazoMs: number,
 ): Promise<ReadableStream<Uint8Array> | null> {
   // O prazo vale até a primeira resposta; o stream em si pode durar mais.
   const prazo = new AbortController();
-  const timer = setTimeout(() => prazo.abort(), 45000);
+  const timer = setTimeout(() => prazo.abort(), prazoMs);
   try {
     const res = await fetch(motor.url, {
       method: "POST",
@@ -179,7 +199,7 @@ async function chamar(
         "Content-Type": "application/json",
         ...(motor.chave ? { Authorization: `Bearer ${motor.chave}` } : {}),
       },
-      body: JSON.stringify(corpo(motor, messages)),
+      body: JSON.stringify(corpo(motor, messages, maxTokens)),
       signal: prazo.signal,
     });
     if (res.ok && res.body) return res.body;

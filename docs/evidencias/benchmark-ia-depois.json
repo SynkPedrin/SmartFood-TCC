@@ -1,0 +1,153 @@
+{
+  "data": "2026-11-08T00:59:38.645Z",
+  "site": "http://127.0.0.1:3100",
+  "resumo": {
+    "simples": {
+      "acertos": "6/6",
+      "primeira_mediana_s": 0.09,
+      "total_mediano_s": 0.09
+    },
+    "media": {
+      "acertos": "4/4",
+      "primeira_mediana_s": 4.18,
+      "total_mediano_s": 25.88
+    },
+    "complexa": {
+      "acertos": "3/3",
+      "primeira_mediana_s": 23.79,
+      "total_mediano_s": 24.28
+    }
+  },
+  "casos": [
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Quantos produtos temos no cardápio?",
+      "motor": "dados",
+      "primeira": 0.17517441700000017,
+      "total": 0.17527349999999933,
+      "resposta": "O cardápio tem **24 produtos** em **6 categorias**, todos disponíveis para o cliente.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Quantas mesas estão livres agora?",
+      "motor": "dados",
+      "primeira": 0.08876475000000028,
+      "total": 0.08884170799999992,
+      "resposta": "**8 de 8 mesas livres** agora (1, 2, 3, 4, 5, 6, 7, 8). Nenhuma ocupada.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Qual a receita de hoje?",
+      "motor": "dados",
+      "primeira": 0.11906791599999997,
+      "total": 0.11912841600000137,
+      "resposta": "Hoje: **receita de R$ 0,00** em 0 pedido(s) entregue(s), ticket médio de **R$ 0,00**. 0 pedido(s) no dia, 0 em andamento. A receita conta só pedidos entregues e não é pagamento confirmado.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Qual o item mais caro do cardápio?",
+      "motor": "dados",
+      "primeira": 0.04167275000000154,
+      "total": 0.041741167000000134,
+      "resposta": "O item mais caro do cardápio é o **Combo Pizza**, por **R$ 74,90**.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "totem",
+      "q": "Quanto custa o X-Burger?",
+      "motor": "dados",
+      "primeira": 0.028271749999999884,
+      "total": 0.02831762499999968,
+      "resposta": "O **X-Burger** custa **R$ 24,90** e fica pronto em cerca de 15 min.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "totem",
+      "q": "Qual a bebida mais barata?",
+      "motor": "dados",
+      "primeira": 0.022004957999999533,
+      "total": 0.0220445409999993,
+      "resposta": "O item mais barato em Bebidas é o **Água Mineral**, por **R$ 4,90**.",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "totem",
+      "q": "Me indica um lanche e uma bebida até R$ 35",
+      "motor": "ollama",
+      "primeira": 8.326495042000003,
+      "total": 25.882068292,
+      "resposta": "Aqui estão algumas opções que cabem no seu orçamento de R$ 35: * **X-Burger** com **Limonada** (R$ 34,80) ou com **Guaraná**/Cola. * **Batata com Cheddar e Bacon** com **Café Espresso**, **Guaraná**, **Cola** ou **Água M",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "totem",
+      "q": "Tem alguma opção sem carne?",
+      "motor": "ollama",
+      "primeira": 3.9479391250000044,
+      "total": 17.213567917,
+      "resposta": "Sim, temos várias opções sem carne no cardápio. Para bebidas, você pode escolher Limonada, Suco de Laranja ou Suco de Morango. Nas entradas, existem Bruschetta, Dadinho de Tapioca e Onion Rings. Se preferir um prato prin",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "admin",
+      "q": "Quais categorias têm menos itens?",
+      "motor": "ollama",
+      "primeira": 4.179262750000001,
+      "total": 26.184929084000004,
+      "resposta": "As categorias com menos itens são **Sobremesas** (1 item) e **Infantil** (3 itens). Sobremesas tem apenas o Sorvete, enquanto Infantil possui Frango Empanado, Mini Burger e Mini Macarrão. As demais categorias possuem ent",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "admin",
+      "q": "Tem algum pedido atrasado ou parado na cozinha?",
+      "motor": "dados",
+      "primeira": 0.2260809580000059,
+      "total": 0.226122457999998,
+      "resposta": "Nenhum pedido atrasado ou parado agora. 0 pedido(s) em andamento, todos dentro do tempo.",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Faça um diagnóstico do restaurante agora e diga as 3 ações mais importantes.",
+      "motor": "groq",
+      "primeira": 21.219694292,
+      "total": 21.587330166999994,
+      "resposta": "**Diagnóstico atual:** - Receita = R$ 0,00; 0 pedidos entregues hoje. - Todas as 8 mesas estão disponíveis, mas nenhuma foi ocupada. - Cardápio tem 24 itens, porém a categoria **Sobremesas** possui apenas 1 opção (Sorvet",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Monte uma promoção para terça-feira usando itens do cardápio, com preço sugerido.",
+      "motor": "groq",
+      "primeira": 23.792927791000007,
+      "total": 24.276801416,
+      "resposta": "**Promoção “Terça Light & Burger” – combo exclusivo para terça‑feira** | Item incluído | Quantidade | Preço sugerido (R$) | |---|---|---| | X‑Burger | 1 unidade | 19,90 | | Batata Frita | 1 porção | 12,90 | | Limonada | ",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Analise o cardápio: preços, lacunas e o que melhorar.",
+      "motor": "groq",
+      "primeira": 31.99358649999999,
+      "total": 32.895861625,
+      "resposta": "**O cardápio está completo, mas há desequilíbrios de preço e variedade.** **Análise rápida** - **Preços**: todos os itens estão dentro das faixas de referência, exceto o *Combo Pizza* (R$ 74,90) que está acima do teto da",
+      "acertou": true
+    }
+  ]
+}

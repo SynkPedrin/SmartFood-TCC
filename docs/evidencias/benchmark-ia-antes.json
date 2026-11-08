@@ -1,0 +1,153 @@
+{
+  "data": "2026-11-08T00:44:18.792Z",
+  "site": "http://127.0.0.1:3100",
+  "resumo": {
+    "simples": {
+      "acertos": "6/6",
+      "primeira_mediana_s": 2.67,
+      "total_mediano_s": 9.07
+    },
+    "media": {
+      "acertos": "4/4",
+      "primeira_mediana_s": 3.22,
+      "total_mediano_s": 20.06
+    },
+    "complexa": {
+      "acertos": "3/3",
+      "primeira_mediana_s": 3.26,
+      "total_mediano_s": 81.49
+    }
+  },
+  "casos": [
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Quantos produtos temos no cardápio?",
+      "motor": "ollama",
+      "primeira": 23.154778708,
+      "total": 32.599275083,
+      "resposta": "Você tem **24 produtos** no cardápio. Eles estão distribuídos nas seguintes categorias: - Entradas (5 itens) - Burgers (4 itens) - Combos (3 itens) - Bebidas (7 itens) - Infantil (3 itens) - Sobremesas (1 item) Pizzas, P",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Quantas mesas estão livres agora?",
+      "motor": "ollama",
+      "primeira": 2.6705359159999933,
+      "total": 7.868027915999999,
+      "resposta": "Há **8 mesas** disponíveis no salão. | Número | Status | |--------|--------| | 1 a 8 | Disponível | Todas as mesas cadastradas (capacidade padrão de 4 pessoas) estão livres neste momento.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Qual a receita de hoje?",
+      "motor": "ollama",
+      "primeira": 2.4187497500000026,
+      "total": 9.608341583000001,
+      "resposta": "A receita de hoje (2026-11-08) é **R$ 0,00**. Isso ocorre porque não há pedidos com status \"Entregue\" registrados no sistema até o momento. O valor reflete apenas a soma dos pedidos entregues e não representa faturamento",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "admin",
+      "q": "Qual o item mais caro do cardápio?",
+      "motor": "ollama",
+      "primeira": 2.585307332999997,
+      "total": 7.244392832999998,
+      "resposta": "O item mais caro do cardápio é o **Combo Pizza**, com preço de **R$ 74,90**. Ele pertence à categoria Combos e tem tempo de preparo de 30 minutos.",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "totem",
+      "q": "Quanto custa o X-Burger?",
+      "motor": "ollama",
+      "primeira": 2.7369373750000086,
+      "total": 9.066107000000004,
+      "resposta": "O **X-Burger** custa **R$ 24,90**. Ele é um hambúrguer artesanal grelhado com queijo derretido e maionese da casa no pão de gergelim tostado. Gostaria de acompanhá-lo com uma bebida ou sobremesa?",
+      "acertou": true
+    },
+    {
+      "nivel": "simples",
+      "modo": "totem",
+      "q": "Qual a bebida mais barata?",
+      "motor": "ollama",
+      "primeira": 2.3421962080000083,
+      "total": 6.197445124999998,
+      "resposta": "A opção mais econômica é a **Água Mineral**, por apenas R$ 4,90. Se preferir algo com gás ou sem, ambas estão disponíveis nessa faixa de preço.",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "totem",
+      "q": "Me indica um lanche e uma bebida até R$ 35",
+      "motor": "ollama",
+      "primeira": 9.101991249999992,
+      "total": 26.820996457999993,
+      "resposta": "Aqui estão algumas opções que cabem no seu orçamento de R$ 35: * **X-Burger** com **Limonada** (R$ 34,80) ou **Guaraná/Cola** (R$ 31,80). * **X-Salada** com **Café Espresso**, **Guaraná** ou **Cola** (todos entre R$ 33,8",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "totem",
+      "q": "Tem alguma opção sem carne?",
+      "motor": "ollama",
+      "primeira": 2.6124521249999964,
+      "total": 12.079108625000009,
+      "resposta": "Sim, temos várias opções sem carne no cardápio. Para bebidas, você pode escolher entre Limonada, Suco de Laranja, Suco de Morango ou Água Mineral. Nas entradas, há Batata Frita, Bruschetta, Dadinho de Tapioca e Onion Rin",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "admin",
+      "q": "Quais categorias têm menos itens?",
+      "motor": "ollama",
+      "primeira": 2.8476291250000068,
+      "total": 20.061358374999998,
+      "resposta": "Aqui está a análise das quantidades de itens por categoria no cardápio atual: | Categoria | Quantidade de Itens | Status | |-----------|---------------------|--------| | Bebidas | 7 | Maior volume | | Entradas | 5 | Volu",
+      "acertou": true
+    },
+    {
+      "nivel": "media",
+      "modo": "admin",
+      "q": "Tem algum pedido atrasado ou parado na cozinha?",
+      "motor": "ollama",
+      "primeira": 3.2220915410000015,
+      "total": 9.042335749999998,
+      "resposta": "Não há pedidos na fila da cozinha hoje. Os indicadores do dia mostram **0 pedidos entregues**, **0 em andamento** e **0 receita**. Como não existem pedidos ativos, não há nenhum item parado ou com tempo de preparo excedi",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Faça um diagnóstico do restaurante agora e diga as 3 ações mais importantes.",
+      "motor": "ollama",
+      "primeira": 2.9180866249999964,
+      "total": 81.494040959,
+      "resposta": "Aqui está o diagnóstico atual do restaurante **SmartFood Demo** com base nos dados do sistema: ### Diagnóstico Geral * **Cardápio:** Completo com 24 itens em 6 categorias (Entradas, Burgers, Combos, Infantil, Bebidas, So",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Monte uma promoção para terça-feira usando itens do cardápio, com preço sugerido.",
+      "motor": "ollama",
+      "primeira": 5.102199625000009,
+      "total": 51.25508425000002,
+      "resposta": "Para terça-feira (dia fraco), sugiro a promoção **\"Combo Dia de Semana\"**. O objetivo é aumentar o ticket médio sem criar itens inexistentes. **Composição da Promoção:** 1. **X-Burger** (Burgers) - R$ 24,90 2. **Batata F",
+      "acertou": true
+    },
+    {
+      "nivel": "complexa",
+      "modo": "admin",
+      "q": "Analise o cardápio: preços, lacunas e o que melhorar.",
+      "motor": "ollama",
+      "primeira": 3.256605959000008,
+      "total": 116.417155042,
+      "resposta": "Aqui está a análise do cardápio atual com base nos dados fornecidos: ### 1. Lacunas de Conteúdo * **Sobremesas:** Existe apenas um item (**Sorvete**). É a categoria mais vazia, representando uma oportunidade clara para e",
+      "acertou": true
+    }
+  ]
+}

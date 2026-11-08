@@ -6,15 +6,17 @@ import toast from 'react-hot-toast'
 import { Send, User, RotateCcw, ChevronRight, Brain, BookPlus, Sparkles } from 'lucide-react'
 import Markdown from '@/components/Markdown'
 import ParticleBall from '@/components/ParticleBall'
+import PontosDeAtencao from '@/components/PontosDeAtencao'
 import { useIAChat, nextChatId, type ChatMsg } from '@/lib/ia/useChat'
 import { useContasCerebro } from '@/lib/ia/useContas'
 import { TOKEN_KEY } from '@/lib/api'
 import { useBrand } from '@/lib/brand/BrandContext'
 
 const SUGGESTIONS = [
+  { label: 'Diagnóstico agora',  prompt: 'Faça um diagnóstico do restaurante agora e diga as 3 ações mais importantes.' },
   { label: 'Resumo da operação', prompt: 'Mostre o resumo de vendas, receita, ticket médio e pedidos de hoje.' },
   { label: 'Resumo do cardápio',   prompt: 'Analise meu cardápio atual: quantos produtos e categorias existem, faixa de preços e o que está faltando.' },
-  { label: 'Gerar descrição',      prompt: 'Gere uma descrição curta e apetitosa para um "Frango Grelhado com limão, alho e azeite".' },
+  { label: 'Gerar descrição',      prompt: 'Reescreva a descrição do Bacon Burger para ficar mais apetitosa, em até 140 caracteres.' },
   { label: 'Otimizar cardápio',    prompt: 'Com base nos produtos cadastrados, sugira 3 melhorias concretas para aumentar as vendas.' },
   { label: 'Produtos sem foto',    prompt: 'Quais produtos estão sem descrição ou indisponíveis no cardápio atual?' },
   { label: 'Ideia de promoção',    prompt: 'Sugira uma promoção usando os pratos que realmente existem no meu cardápio.' },
@@ -212,6 +214,7 @@ export default function IAPage() {
 
         {/* Suggestions sidebar */}
         <div>
+          <PontosDeAtencao onPerguntar={submit} ocupado={loading} />
           <h3 style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12 }}>
             Sugestões rápidas
           </h3>

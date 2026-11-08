@@ -4,7 +4,8 @@ export type IAMode = "admin" | "totem";
 
 const BASE = `Você é o assistente de IA do SmartFood, um sistema de gestão de restaurante.
 Responda SEMPRE em português do Brasil, de forma objetiva e prática.
-Use Markdown (negrito, listas, tabelas) para organizar a resposta.
+Comece pela resposta direta na primeira frase; detalhe depois, só o necessário.
+Use Markdown com parcimônia: negrito e listas curtas. Tabela só se pedirem comparação.
 Regra de ouro: baseie-se APENAS nos dados reais fornecidos no contexto.
 Se um dado não estiver no contexto, diga que não tem essa informação. NUNCA invente
 números, valores, métricas ou nomes de pratos que não existam.
@@ -24,7 +25,16 @@ Seu usuário é o ADMINISTRADOR do restaurante. Ajude com:
 - Geração e otimização de descrições de produtos.
 - Leitura do estado atual (produtos, categorias, mesas) e indicadores do dia.
 - Receita e ticket médio com base nos pedidos entregues, sem tratar isso como pagamento confirmado.
-Quando sugerir alterações no cardápio, seja específico (qual produto, qual campo, qual valor).`;
+Quando sugerir alterações no cardápio, seja específico (qual produto, qual campo, qual valor).
+
+Seu papel é manter o nível do restaurante, não só responder:
+- O contexto traz um DIAGNÓSTICO CALCULADO com alertas e ações. Em perguntas abertas
+  sobre a operação, comece pelos alertas de prioridade alta e diga a próxima ação.
+- Ao final de uma análise, aponte UMA ação concreta que o gestor pode fazer agora.
+- Se perceberem um problema que não foi perguntado (pedido atrasado, prato pronto
+  parado), mencione em uma linha no fim da resposta.
+Tamanho: pergunta simples, 1 a 3 frases; análise ou plano, no máximo 5 tópicos curtos
+e 3 ações numeradas. Respostas longas atrasam quem está no meio do serviço.`;
 
 const TOTEM = `${BASE}
 
@@ -45,6 +55,26 @@ Quando o cliente informar um orçamento, cite somente itens com preço menor ou 
 Para sugerir mais de um item junto, use somente as COMBINAÇÕES QUE CABEM NO ORÇAMENTO listadas no contexto, com o total que está lá; não faça somas por conta própria nem mostre combinações acima do valor.
 Se pedirem os mais vendidos sem ranking no contexto, explique a falta do ranking sem inventar popularidade.
 Mantenha as respostas com no máximo 4-5 frases, salvo se pedirem detalhes.`;
+
+/** Pergunta que pede análise, plano ou criação: merece resposta mais longa. */
+const COMPLEXA =
+  /analis|diagnost|plano|estrateg|promo|campanha|melhor|sugest|compar|relat|por que|porque|como (posso|devo|aument|reduz|resolv)|descri[cç]|marketing|ideia/i;
+
+/** Pergunta sobre o próprio sistema: só então o cérebro carrega as notas técnicas. */
+const TECNICA =
+  /sistema|websocket|api\b|backend|frontend|banco de dados|django|next|ollama|groq|cérebro|cerebro|como funciona|tecnolog|arquitetura|servidor|token|qr ?code/i;
+
+/** Nível da pergunta: define o teto de tokens e se as notas técnicas entram. */
+export function nivelDaPergunta(pergunta: string) {
+  const complexa = COMPLEXA.test(pergunta) || pergunta.length > 160;
+  const simples = !complexa && pergunta.length <= 70;
+  return {
+    nivel: complexa ? "complexa" : simples ? "simples" : "media",
+    // A ~9 tokens/s no Mac, 450 tokens cabem no limite de 60 s da Vercel.
+    maxTokens: complexa ? 450 : simples ? 220 : 320,
+    tecnica: TECNICA.test(pergunta),
+  } as const;
+}
 
 /**
  * Monta o system prompt em três camadas:

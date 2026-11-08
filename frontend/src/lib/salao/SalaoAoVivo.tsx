@@ -5,9 +5,9 @@ import { useQueryClient } from '@tanstack/react-query'
 
 /** Quais consultas cada aviso do salão deixa velhas. */
 const AFETADAS: Record<string, string[][]> = {
-  mesa: [['mesas'], ['mesa-pedidos']],
-  pedido: [['pedidos'], ['mesas'], ['mesa-pedidos'], ['indicadores'], ['acompanhamento']],
-  cardapio: [['produtos'], ['categorias']],
+  mesa: [['mesas'], ['mesa-pedidos'], ['diagnostico']],
+  pedido: [['pedidos'], ['mesas'], ['mesa-pedidos'], ['indicadores'], ['acompanhamento'], ['diagnostico']],
+  cardapio: [['produtos'], ['categorias'], ['diagnostico']],
 }
 
 /**

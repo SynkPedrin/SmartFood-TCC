@@ -15,10 +15,21 @@ interface Categoria {
   id: number;
   nome: string;
 }
-interface Mesa {
+export interface Mesa {
   id: number;
   numero: number;
   status: string;
+  atualizado_em?: string;
+}
+/** Pedido em andamento, com os horários que o diagnóstico usa para achar atrasos. */
+export interface PedidoAberto {
+  id: number;
+  mesa_numero: number;
+  status: string;
+  quantidade_itens: number;
+  tempo_preparo_estimado: number;
+  criado_em: string;
+  atualizado_em: string;
 }
 export interface Indicadores {
   data: string;
@@ -38,6 +49,7 @@ export interface RestaurantSnapshot {
   mesas: Mesa[];
   indicadores: Indicadores | null;
   memorias: { texto: string; criado_em: string }[];
+  pedidosAbertos: PedidoAberto[];
   falhas: string[];
 }
 async function getJSON<T>(
@@ -76,7 +88,7 @@ export async function loadSnapshot(
   headers: Record<string, string>,
   ids?: number[],
 ): Promise<RestaurantSnapshot> {
-  const [categorias, produtos, mesas, indicadores, notas] = await Promise.all([
+  const [categorias, produtos, mesas, indicadores, notas, abertos] = await Promise.all([
     todos<Categoria>("categorias", headers),
     todos<ProdutoSnapshot>("produtos", headers),
     mode === "admin" ? todos<Mesa>("mesas", headers) : Promise.resolve([]),
@@ -88,6 +100,9 @@ export async function loadSnapshot(
           "/ia/memorias/",
           headers,
         )
+      : Promise.resolve(null),
+    mode === "admin"
+      ? getJSON<{ results: PedidoAberto[] }>("/pedidos/?aberto=true&page_size=500", headers)
       : Promise.resolve(null),
   ]);
   const falhas: string[] = [];
@@ -109,6 +124,7 @@ export async function loadSnapshot(
     mesas: mesas ?? [],
     indicadores,
     memorias: notas?.results ?? [],
+    pedidosAbertos: abertos?.results ?? [],
     falhas,
   };
 }

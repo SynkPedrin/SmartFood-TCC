@@ -57,3 +57,30 @@ test('combinações sugeridas cabem no orçamento',()=>{
  for(const c of lista){const v=Number(c.split('R$')[1].trim().replace('.','').replace(',','.'));assert.ok(v<=35,c)}
  assert.deepEqual(combinacoes(snapshot.produtos,10),[])
 })
+const {respostaRapida}=require('../src/lib/ia/rapido.ts')
+const {diagnosticar}=require('../src/lib/ia/diagnostico.ts')
+const agora=Date.parse('2026-11-07T20:00:00Z')
+const minAtras=m=>new Date(agora-m*60000).toISOString()
+const salao={...snapshot,pedidosAbertos:[],mesas:[{id:1,numero:1,status:'disponivel'},{id:2,numero:2,status:'ocupada',atualizado_em:minAtras(30)},{id:3,numero:3,status:'ocupada',atualizado_em:minAtras(2)}],indicadores:{data:'2026-11-07',receita:'62.70',ticket_medio:'62.70',pedidos_hoje:1,entregues:1,em_andamento:0,mesas_atendidas:1,mais_vendidos:[],por_status:[]}}
+test('resposta instantânea traz o dado exato do banco',()=>{
+ assert.match(respostaRapida('totem','Quanto custa o X-Burger?',salao,[]),/X-Burger.*R\$\s24,90/)
+ assert.match(respostaRapida('totem','Qual a bebida mais barata?',salao,[]),/Suco de Laranja/)
+ assert.match(respostaRapida('admin','Quantas mesas estão livres agora?',salao,[]),/1 de 3 mesas livres/)
+ assert.match(respostaRapida('admin','Qual a receita de hoje?',salao,[]),/R\$\s62,70/)
+})
+test('pergunta aberta vai para o modelo, não para a resposta instantânea',()=>{
+ for(const q of ['Me indica algo gostoso','Como posso aumentar o ticket médio?','Analise o cardápio','Monte uma promoção de terça'])
+  assert.equal(respostaRapida('admin',q,salao,[]),null,q)
+ assert.equal(respostaRapida('totem','Qual a receita de hoje?',salao,[]),null)
+})
+test('diagnóstico aponta atraso, prato parado e mesa sem pedido',()=>{
+ const d=diagnosticar({...salao,pedidosAbertos:[
+  {id:7,mesa_numero:3,status:'recebido',quantidade_itens:1,tempo_preparo_estimado:15,criado_em:minAtras(40),atualizado_em:minAtras(40)},
+  {id:8,mesa_numero:1,status:'pronto',quantidade_itens:1,tempo_preparo_estimado:10,criado_em:minAtras(20),atualizado_em:minAtras(12)}]},agora)
+ const textos=d.map(a=>a.texto).join(' | ')
+ assert.match(textos,/#7.*40 min/)
+ assert.match(textos,/#8.*pronto há 12 min/)
+ assert.match(textos,/Mesa 2 ocupada há 30 min/)
+ assert.doesNotMatch(textos,/Mesa 3 ocupada/)
+ assert.equal(d[0].nivel,'alta')
+})

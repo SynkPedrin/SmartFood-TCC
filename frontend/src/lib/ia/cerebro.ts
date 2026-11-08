@@ -226,7 +226,7 @@ async function lerCerebro(slug: string): Promise<Cerebro | null> {
 /* ──────────────────────────── serialização pro prompt ──────────────────────── */
 
 /** Converte o cérebro em texto para o system prompt, respeitando o teto de caracteres. */
-export function cerebroToContext(c: Cerebro): string {
+export function cerebroToContext(c: Cerebro, opcoes: { sistema?: boolean } = {}): string {
   const { conta } = c
   const cab = [
     `CÉREBRO DA CONTA "${conta.nome}" (slug: ${conta.slug}).`,
@@ -257,7 +257,9 @@ export function cerebroToContext(c: Cerebro): string {
 
   for (const s of c.secoes) empilha('CÉREBRO', s)
   for (const m of c.memorias) empilha('MEMÓRIA', m)
-  for (const s of c.sistema) empilha('SISTEMA', s)
+  // Notas técnicas só quando a pergunta é sobre o sistema: são o maior bloco do
+  // cérebro e só atrasariam as perguntas de gestão.
+  if (opcoes.sistema) for (const s of c.sistema) empilha('SISTEMA', s)
 
   return partes.join('')
 }
