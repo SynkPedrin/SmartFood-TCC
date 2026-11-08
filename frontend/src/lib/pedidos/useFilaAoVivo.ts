@@ -17,8 +17,9 @@ export function useFilaAoVivo(aoMudar: () => void): { conectado: boolean } {
   useEffect(() => { callback.current = aoMudar }, [aoMudar])
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    if (!token) return
+    // Monitor da cozinha sem login: usa o canal público do salão, que avisa
+    // pedido novo e mudança de status (só id e status, sem itens).
+    const semLogin = !localStorage.getItem(TOKEN_KEY)
 
     let socket: WebSocket | null = null
     let tentativa = 0
@@ -32,20 +33,24 @@ export function useFilaAoVivo(aoMudar: () => void): { conectado: boolean } {
 
     async function conectar() {
       if (encerrado) return
-      let ticket: string
-      try { ticket = (await api.post('/auth/ws-ticket/')).data.ticket } catch {
-        if (!encerrado) reconectar = setTimeout(conectar, Math.min(30000, 1000*2**tentativa++))
-        return
+      if (semLogin) {
+        socket = new WebSocket(`${base}/ws/salao/`)
+      } else {
+        let ticket: string
+        try { ticket = (await api.post('/auth/ws-ticket/')).data.ticket } catch {
+          if (!encerrado) reconectar = setTimeout(conectar, Math.min(30000, 1000*2**tentativa++))
+          return
+        }
+        if (encerrado) return
+        socket = new WebSocket(`${base}/ws/cozinha/?ticket=${encodeURIComponent(ticket)}`)
       }
-      if (encerrado) return
-      socket = new WebSocket(`${base}/ws/cozinha/?ticket=${encodeURIComponent(ticket)}`)
 
       socket.onopen = () => { tentativa = 0; setConectado(true) }
 
       socket.onmessage = evento => {
         try {
           const dado = JSON.parse(evento.data)
-          if (dado.tipo === 'fila') callback.current()
+          if (dado.tipo === 'fila' || dado.tipo === 'pedido') callback.current()
         } catch {
           /* frame que não é JSON não interessa aqui */
         }

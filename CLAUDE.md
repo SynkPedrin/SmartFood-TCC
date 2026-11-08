@@ -132,6 +132,16 @@ de preço/disponibilidade **vale o banco**. A conta ativa é `brand.accountId`
 Trocar de conta: **Admin → Personalização → Conta ativa**. Ensinar algo à IA:
 **Admin → Assistente IA → Ensinar ao cérebro**.
 
+### Dois sites publicados (mesmo código)
+
+`NEXT_PUBLIC_SITE` escolhe o site no build (ver `frontend/src/lib/site.ts` e `frontend/src/middleware.ts`):
+
+- `mesa` → https://smartfood-mesas.vercel.app (projeto Vercel `smart-food-tcc-4k2l`): a raiz é o cardápio do cliente; rotas da equipe redirecionam.
+- `equipe` → https://smartfood-equipe.vercel.app (projeto `smartfood-equipe`): a raiz mostra só **Cozinha** (sem login) e **Gestor** (com senha); `/totem` redireciona.
+- sem valor: tudo junto (desenvolvimento local).
+
+`NEXT_PUBLIC_MESA_URL` faz o QR code gerado na gestão apontar para o site das mesas. A cozinha não tem login: `PermissaoPedido` libera sem token só `GET ?aberto=true` e avançar status (preparando/pronto/entregue); cancelar e o resto exigem a equipe. `scripts/publicar.sh` grava as variáveis e republica os dois projetos.
+
 ### Environment variables
 
 See [.env.example](.env.example) for all required vars. Key frontend var: `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:8000/api/v1`).

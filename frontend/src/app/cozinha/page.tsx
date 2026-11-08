@@ -7,7 +7,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Home, RefreshCw, Clock, ChefHat, CheckCircle, Bell, WifiOff, Radio } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import { ExigeLogin } from '@/components/ExigeLogin'
 import { useBrand } from '@/lib/brand/BrandContext'
 import { pedidosApi } from '@/lib/api'
 import { useFilaAoVivo } from '@/lib/pedidos/useFilaAoVivo'
@@ -72,12 +71,10 @@ const cardAnim = {
   exit:    { opacity: 0, scale: 0.88, y: -12, transition: { duration: 0.22 } },
 }
 
+/** Sem login: a cozinha roda num monitor fixo. A API só deixa ler a fila
+ *  aberta e avançar o preparo; cancelar e o resto continuam com a equipe. */
 export default function CozinhaPage() {
-  return (
-    <ExigeLogin>
-      <Cozinha />
-    </ExigeLogin>
-  )
+  return <Cozinha />
 }
 
 function Cozinha() {
@@ -177,7 +174,7 @@ function Cozinha() {
           </button>
 
           <Link href="/" className="btn btn-ghost btn-sm" style={{ gap: 7 }}>
-            <Home size={13} /> Sair
+            <Home size={13} /> Início
           </Link>
         </div>
       </header>

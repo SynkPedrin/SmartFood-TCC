@@ -17,14 +17,18 @@ export function Ambiente() {
   if (pathname?.startsWith('/cozinha')) return null
 
   const fundo = ready ? brand.background : 'dots'
+  const imagemPropria = fundo === 'image' && !!brand.backgroundImage
+  // O wallpaper oficial é a base; some só no "liso" ou com imagem própria.
+  const wallpaper = fundo !== 'plain' && !imagemPropria
 
   return (
-    <div className="ambiente" aria-hidden data-fundo={fundo}>
+    <div className="ambiente" aria-hidden data-fundo={fundo} data-wallpaper={wallpaper || undefined}>
+      {wallpaper && <div className="ambiente-wallpaper" />}
       <div className="ambiente-luz ambiente-luz-a" />
       <div className="ambiente-luz ambiente-luz-b" />
       <div className="ambiente-luz ambiente-luz-c" />
       <div className="ambiente-palco" />
-      {fundo === 'image' && brand.backgroundImage ? (
+      {imagemPropria ? (
         <div className="ambiente-imagem" style={{ backgroundImage: `url(${brand.backgroundImage})` }} />
       ) : (
         <div className="ambiente-textura" />

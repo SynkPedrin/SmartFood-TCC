@@ -24,6 +24,7 @@ import type {
 import ChefIA from "@/components/ChefIA";
 import { SeloConfirmado } from "@/components/experiencia/Celebracao";
 import { voarParaSacola } from "@/lib/experiencia/voar";
+import { MODO_SITE } from "@/lib/site";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useBrand } from "@/lib/brand/BrandContext";
 import {
@@ -269,9 +270,11 @@ export default function TotemPage() {
   if (!mesa)
     return (
       <main className="table-welcome">
-        <Link href="/" className="btn btn-ghost welcome-back">
-          <ArrowLeft size={16} /> Início
-        </Link>
+        {MODO_SITE !== "mesa" && (
+          <Link href="/" className="btn btn-ghost welcome-back">
+            <ArrowLeft size={16} /> Início
+          </Link>
+        )}
         <span className="logo-halo">
           <BrandLogo size={88} />
         </span>

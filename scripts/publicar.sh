@@ -11,8 +11,13 @@
 # para instalar as dependências, e pare-o: as duas coisas usam a porta 8100.
 set -eu
 cd "$(dirname "$0")/.."
-site="${SMARTFOOD_VERCEL_URL:-https://smart-food-tcc-4k2l.vercel.app}"
-projeto="${SMARTFOOD_VERCEL_PROJECT:-smart-food-tcc-4k2l}"
+# Dois sites do mesmo código (NEXT_PUBLIC_SITE em cada projeto da Vercel):
+# o das mesas (QR code do cliente) e o da equipe (cozinha + gestor).
+site_mesas="${SMARTFOOD_MESAS_URL:-https://smartfood-mesas.vercel.app}"
+projeto_mesas="${SMARTFOOD_MESAS_PROJECT:-smart-food-tcc-4k2l}"
+site_equipe="${SMARTFOOD_EQUIPE_URL:-https://smartfood-equipe.vercel.app}"
+projeto_equipe="${SMARTFOOD_EQUIPE_PROJECT:-smartfood-equipe}"
+site_antigo="https://smart-food-tcc-4k2l.vercel.app"
 modelo="${OLLAMA_MODEL:-qwen3.5:9b}"
 api_porta=8100
 proxy_porta=11435
@@ -52,7 +57,11 @@ url_do_tunel() { # $1 = nome do log; espera a Cloudflare informar a URL pública
   done
   return 1
 }
-definir() { vercel env add "$1" production --value "$2" --force --yes --project "$projeto" >/dev/null 2>&1; }
+definir() { # grava a variável nos dois projetos
+  for p in "$projeto_mesas" "$projeto_equipe"; do
+    vercel env add "$1" production --value "$2" --force --yes --project "$p" >/dev/null 2>&1 || return 1
+  done
+}
 aquecer() { # carrega o modelo com o mesmo contexto da IA, para a pergunta não esperar
   curl -sf http://127.0.0.1:11434/api/generate -d "{\"model\":\"$modelo\",\"keep_alive\":\"2h\",\"options\":{\"num_ctx\":16384}}" >/dev/null || true
 }
@@ -78,8 +87,13 @@ publicar() { # abre os túneis, aponta a Vercel para eles e republica; 1 se falh
     definir OLLAMA_MODEL "$modelo" &&
     definir OLLAMA_API_KEY "$chave" &&
     definir CEREBRO_CONTA_PADRAO smartfood-demo || { echo "   não consegui atualizar a Vercel"; return 1; }
-  echo "   Republicando o site (cerca de 1 minuto)"
-  vercel redeploy "$site" --target production > "$logs/vercel.log" 2>&1 || { echo "   a Vercel não republicou (veja $logs/vercel.log)"; return 1; }
+  echo "   Republicando os dois sites (cerca de 1 minuto)"
+  vercel redeploy "$site_mesas" --target production > "$logs/vercel-mesas.log" 2>&1 &
+  r1=$!
+  vercel redeploy "$site_equipe" --target production > "$logs/vercel-equipe.log" 2>&1 &
+  r2=$!
+  wait $r1 || { echo "   a Vercel não republicou as mesas (veja $logs/vercel-mesas.log)"; return 1; }
+  wait $r2 || { echo "   a Vercel não republicou a equipe (veja $logs/vercel-equipe.log)"; return 1; }
   aquecer
 }
 
@@ -89,8 +103,8 @@ echo "1/5 Banco e cardápio"
 echo "2/5 Backend em modo produção e proxy do Ollama"
 (cd backend && DEBUG=False SECURE_SSL_REDIRECT=False \
   ALLOWED_HOSTS=".trycloudflare.com,127.0.0.1,localhost" \
-  CORS_ORIGINS="$site,http://127.0.0.1:3100,http://localhost:3100" \
-  CSRF_TRUSTED_ORIGINS="$site" \
+  CORS_ORIGINS="$site_mesas,$site_equipe,$site_antigo,http://127.0.0.1:3100,http://localhost:3100" \
+  CSRF_TRUSTED_ORIGINS="$site_mesas,$site_equipe,$site_antigo" \
   exec .venv/bin/daphne -b 127.0.0.1 -p $api_porta smartfood.asgi:application) > "$logs/backend.log" 2>&1 &
 pids="$pids $!"
 OLLAMA_PROXY_KEY="$chave" OLLAMA_MODEL="$modelo" OLLAMA_PROXY_PORT=$proxy_porta \
@@ -101,7 +115,9 @@ echo "3/5 Túneis HTTPS, Vercel e republicação"
 publicar || falha "a publicação não terminou"
 
 echo
-echo "SmartFood no ar: $site"
+echo "SmartFood no ar:"
+echo "   Mesas (QR code):     $site_mesas"
+echo "   Equipe (cozinha+gestor): $site_equipe"
 echo "Deixe este terminal aberto. Ctrl+C tira o sistema do ar."
 
 # Vigia: a cada minuto confere os dois túneis; três falhas seguidas, republica.
@@ -114,5 +130,5 @@ while sleep 60; do
   falhas=$((falhas + 1))
   [ $falhas -lt 3 ] && continue
   echo "$(date '+%H:%M') Túnel caiu. Abrindo outro e republicando..."
-  if publicar; then echo "$(date '+%H:%M') SmartFood de volta: $site"; falhas=0; else falhas=2; fi
+  if publicar; then echo "$(date '+%H:%M') SmartFood de volta: $site_mesas e $site_equipe"; falhas=0; else falhas=2; fi
 done

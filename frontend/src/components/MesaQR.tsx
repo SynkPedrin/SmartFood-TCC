@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { urlDasMesas } from "@/lib/site";
 export function MesaQR({ numero }: { numero: number }) {
   const [imagem, setImagem] = useState(""),
     [url, setURL] = useState(""),
     [erro, setErro] = useState(false);
   useEffect(() => {
     let vivo = true;
-    const link = `${window.location.origin}/totem?mesa=${numero}`;
+    const link = `${urlDasMesas()}/totem?mesa=${numero}`;
     QRCode.toDataURL(link, {
       width: 320,
       margin: 2,

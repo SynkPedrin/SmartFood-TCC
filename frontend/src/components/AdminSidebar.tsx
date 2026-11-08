@@ -18,6 +18,7 @@ import {
 import { BrandLogo } from "./BrandLogo";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useBrand } from "@/lib/brand/BrandContext";
+import { MODO_SITE } from "@/lib/site";
 const nav = [
   { href: "/admin", icon: LayoutDashboard, label: "Visão geral" },
   { href: "/admin/cardapio", icon: BookOpen, label: "Cardápio" },
@@ -88,7 +89,9 @@ export function AdminSidebar() {
           </Link>
           <Link href="/" title="Início" className="admin-nav-link">
             <Home size={18} />
-            <span className="sidebar-label">Seleção de ambiente</span>
+            <span className="sidebar-label">
+              {MODO_SITE === "equipe" ? "Área da equipe" : "Seleção de ambiente"}
+            </span>
           </Link>
           {usuario && (
             <div className="admin-user">

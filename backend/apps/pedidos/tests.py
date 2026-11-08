@@ -190,17 +190,53 @@ class FilaDaCozinhaTests(BaseFixtures):
 
 
 class PermissoesTests(BaseFixtures):
-    def test_ler_fila_exige_login(self):
+    def test_historico_exige_login(self):
         resposta = self.client.get(reverse("pedido-list"))
         self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_mudar_status_exige_login(self):
+    def test_cozinha_le_fila_aberta_sem_login(self):
+        """O monitor da cozinha não tem login: lê só o que está em aberto."""
+        aberto = self.criar_pedido()
+        entregue = self.criar_pedido()
+        Pedido.objects.filter(pk=entregue.pk).update(status=Pedido.Status.ENTREGUE)
+        resposta = self.client.get(reverse("pedido-list"), {"aberto": "true"})
+        self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+        ids = [p["id"] for p in resposta.data["results"]]
+        self.assertIn(aberto.id, ids)
+        self.assertNotIn(entregue.id, ids)
+
+    def test_cozinha_avanca_preparo_sem_login(self):
         pedido = self.criar_pedido()
         resposta = self.client.post(
             reverse("pedido-status", args=[pedido.id]),
             {"status": Pedido.Status.PREPARANDO},
             format="json",
         )
+        self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.status, Pedido.Status.PREPARANDO)
+
+    def test_cozinha_nao_pula_etapa_sem_login(self):
+        pedido = self.criar_pedido()
+        resposta = self.client.post(
+            reverse("pedido-status", args=[pedido.id]),
+            {"status": Pedido.Status.ENTREGUE},
+            format="json",
+        )
+        self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cancelar_exige_login(self):
+        pedido = self.criar_pedido()
+        resposta = self.client.post(
+            reverse("pedido-status", args=[pedido.id]),
+            {"status": Pedido.Status.CANCELADO},
+            format="json",
+        )
+        self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_editar_pedido_exige_login(self):
+        pedido = self.criar_pedido()
+        resposta = self.client.patch(reverse("pedido-detail", args=[pedido.id]), {"observacao": "x"}, format="json")
         self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_cardapio_e_leitura_publica(self):

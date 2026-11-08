@@ -26,12 +26,25 @@ class LeituraPublicaEscritaAutenticada(BasePermission):
 class PermissaoPedido(BasePermission):
     """Pedido tem uma regra própria.
 
-    Criar é público: é o cliente da mesa fazendo o pedido pelo totem, sem conta.
-    Ler, alterar status e excluir exigem login, porque isso é operação interna
-    do restaurante.
+    * Criar é público: é o cliente da mesa fazendo o pedido pelo totem, sem conta.
+    * A tela da cozinha funciona sem login (fica num monitor fixo da cozinha):
+      ela pode ler **só a fila aberta** (`?aberto=true`) e **só avançar** o
+      preparo (em preparo → pronto → entregue). A máquina de estados do pedido
+      continua impedindo pular etapa ou voltar.
+    * Cancelar, ver o histórico completo, editar e excluir exigem a equipe logada.
     """
 
+    #: Etapas que a cozinha pode marcar sem login. Cancelar fica de fora.
+    AVANCOS_DA_COZINHA = {"preparando", "pronto", "entregue"}
+
     def has_permission(self, request, view):
-        if request.method == "POST" and getattr(view, "action", None) == "create":
+        if request.user and request.user.is_authenticated:
             return True
-        return bool(request.user and request.user.is_authenticated)
+        acao = getattr(view, "action", None)
+        if request.method == "POST" and acao == "create":
+            return True
+        if request.method == "GET" and acao == "list":
+            return str(request.query_params.get("aberto", "")).lower() in {"true", "1"}
+        if request.method == "POST" and acao == "status":
+            return str(request.data.get("status", "")) in self.AVANCOS_DA_COZINHA
+        return False

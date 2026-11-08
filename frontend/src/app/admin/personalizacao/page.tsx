@@ -21,9 +21,9 @@ const ACCENT_PRESETS = [
 ]
 
 const BACKGROUNDS: { id: BackgroundStyle; label: string; hint: string }[] = [
-  { id: 'dots', label: 'Pontos', hint: 'Plano infinito com parallax sutil' },
-  { id: 'grid', label: 'Grade', hint: 'Grade fina e discreta' },
-  { id: 'plain', label: 'Liso', hint: 'Somente o creme da marca' },
+  { id: 'dots', label: 'Assinatura', hint: 'Wallpaper oficial com pontos sutis' },
+  { id: 'grid', label: 'Assinatura + grade', hint: 'Wallpaper oficial com grade fina' },
+  { id: 'plain', label: 'Liso', hint: 'Só a luz ambiente, sem wallpaper' },
   { id: 'image', label: 'Imagem', hint: 'Sua foto, com véu para leitura' },
 ]
 

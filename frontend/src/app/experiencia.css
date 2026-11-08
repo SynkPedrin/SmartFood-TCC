@@ -969,3 +969,187 @@
 /* Logo padrão usa multiply (some no branco); no painel escuro ele é invertido
    e somado à luz para continuar visível. Logos próprios ficam como estão. */
 .kitchen-shell img[style*="multiply"] { filter: invert(1); mix-blend-mode: screen !important; }
+
+/* ═══ WALLPAPER DA MARCA ════════════════════════════════════════
+   Fundo oficial (traços verde/ciano/roxo) em tudo que é claro, e como arte
+   nos cards de destaque. A cozinha, escura, fica de fora. */
+:root {
+  --wallpaper: url('/images/wallpaper.jpg');
+  --wallpaper-card: url('/images/wallpaper-card.jpg');
+}
+.ambiente-wallpaper {
+  position: absolute; inset: -4%;
+  background: var(--wallpaper) center / cover no-repeat;
+  animation: wallpaper-deriva 46s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes wallpaper-deriva { to { transform: scale(1.06) translate(-1.2%, .8%); } }
+.ambiente[data-wallpaper] .ambiente-luz { opacity: .45; }
+.ambiente[data-wallpaper] .ambiente-palco { opacity: .7; }
+.ambiente[data-wallpaper][data-fundo="dots"] .ambiente-textura { opacity: .45; }
+.ambiente[data-wallpaper][data-fundo="grid"] .ambiente-textura { opacity: .6; }
+
+/* faixa de arte: wallpaper recortado, com véu para leitura */
+.login-arte {
+  position: relative; overflow: hidden;
+  margin: -32px -30px 22px;
+  height: 156px;
+  border-radius: 22px 22px 0 0;
+  background: var(--wallpaper-card) 50% 50% / 190% auto no-repeat;
+  display: grid; place-items: center;
+  animation: arte-respira 14s ease-in-out infinite alternate;
+}
+.login-arte::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, .92));
+}
+.login-arte .logo-halo { position: relative; z-index: 1; }
+@keyframes arte-respira { to { background-size: 215% auto; background-position: 46% 54%; } }
+.login-card { max-width: 420px; }
+.login-cabeca { margin-bottom: 22px; }
+
+.dashboard-header {
+  position: relative; overflow: hidden; isolation: isolate;
+  padding: 30px 34px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .94) 0%, rgba(255, 255, 255, .72) 42%, rgba(255, 255, 255, 0) 78%),
+    var(--wallpaper-card) 100% 60% / cover no-repeat;
+  box-shadow: var(--sombra-1);
+}
+
+.menu-intro {
+  margin: 28px 0 24px;
+  padding: 32px 36px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .7) 45%, rgba(255, 255, 255, .05) 85%),
+    var(--wallpaper-card) 100% 70% / cover no-repeat;
+  box-shadow: var(--sombra-1);
+}
+.menu-info { background: rgba(255, 255, 255, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 14px 18px; border-radius: 14px; border-left: 0; }
+
+.admin-brand {
+  margin: 12px 12px 0; padding: 18px 14px; border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .9) 35%, rgba(255, 255, 255, .45)),
+    var(--wallpaper-card) 0% 0% / 260% auto no-repeat;
+  border: 1px solid rgba(255, 255, 255, .8);
+}
+
+.mode-card {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .96) 46%),
+    var(--wallpaper-card);
+  background-size: auto, 240% auto;
+  background-position: 0 0, var(--arte-pos, 0% 0%);
+  background-repeat: no-repeat;
+}
+.mode-card:nth-child(2) { --arte-pos: 50% 20%; }
+.mode-card:nth-child(3) { --arte-pos: 100% 100%; }
+.mode-card:hover {
+  background-image:
+    radial-gradient(520px circle at var(--mx, 50%) var(--my, 0%), var(--luz-suave), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .94) 46%),
+    var(--wallpaper-card);
+  background-size: auto, auto, 260% auto;
+  background-position: 0 0, 0 0, var(--arte-pos, 0% 0%);
+}
+
+.brand-bg-swatch.bg-dots, .brand-bg-swatch.bg-grid { background-color: #fff; }
+.brand-bg-swatch.bg-dots {
+  background-image: radial-gradient(rgba(17, 17, 17, .22) 1px, transparent 1.4px), var(--wallpaper-card);
+  background-size: 10px 10px, cover;
+}
+.brand-bg-swatch.bg-grid {
+  background-image:
+    linear-gradient(rgba(17, 17, 17, .12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, .12) 1px, transparent 1px),
+    var(--wallpaper-card);
+  background-size: 11px 11px, 11px 11px, cover;
+}
+
+/* ═══ ÁREA DA EQUIPE (site da equipe) ═══════════════════════════ */
+.equipe {
+  min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 44px; padding: 56px 24px 28px;
+  animation: esmaecer .5s ease backwards;
+}
+.equipe-topo { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+.equipe-topo > * { animation: surgir .8s var(--ease-out) backwards; }
+.equipe-topo > :nth-child(2) { animation-delay: 80ms; }
+.equipe-topo > :nth-child(3) { animation-delay: 160ms; }
+.equipe-topo > :nth-child(4) { animation-delay: 240ms; }
+.equipe-topo h1 { font-size: clamp(34px, 5vw, 58px); font-weight: 650; letter-spacing: -.055em; line-height: 1.06; color: var(--text-primary); }
+.equipe-topo h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 45%, #14b8a6), color-mix(in srgb, var(--primary) 70%, #f472b6), var(--primary));
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: fluir 9s linear infinite;
+}
+.equipe-topo p { font-size: 15px; color: var(--text-secondary); }
+
+.equipe-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; width: 100%; max-width: 900px; }
+.equipe-cards > * { animation: surgir .85s var(--ease-out) backwards; animation-delay: 320ms; }
+.equipe-cards > :nth-child(2) { animation-delay: 420ms; }
+.equipe-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 26px; text-decoration: none; color: var(--text-primary);
+  background-color: rgba(255, 255, 255, .84);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 1px 2px rgba(20, 20, 40, .05), 0 24px 50px -24px rgba(20, 20, 40, .28);
+  transition: transform .6s var(--ease-out), box-shadow .6s var(--ease-out);
+}
+.equipe-card:hover { transform: translateY(-8px); box-shadow: 0 2px 4px rgba(20, 20, 40, .05), 0 40px 70px -26px color-mix(in srgb, var(--tom) 55%, rgba(20, 20, 40, .3)); }
+.equipe-card:has(.arte-esquerda) { --tom: #0d9f74; --anel-cor: rgba(16, 185, 129, .8); --luz-suave: rgba(16, 185, 129, .08); }
+.equipe-card:has(.arte-direita) { --tom: var(--primary); }
+.equipe-arte {
+  position: relative; height: 176px;
+  background: var(--wallpaper-card) no-repeat;
+  background-size: 230% auto;
+  transition: background-size 1.4s var(--ease-out), background-position 1.4s var(--ease-out);
+}
+.equipe-arte.arte-esquerda { background-position: 0% 8%; }
+.equipe-arte.arte-direita { background-position: 100% 95%; }
+.equipe-card:hover .equipe-arte { background-size: 255% auto; }
+.equipe-arte::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(255, 255, 255, .85)); }
+.equipe-icone {
+  position: absolute; left: 26px; bottom: -26px; z-index: 2;
+  width: 64px; height: 64px; border-radius: 20px;
+  display: grid; place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--tom), color-mix(in srgb, var(--tom) 70%, #000));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 14px 30px -10px color-mix(in srgb, var(--tom) 80%, transparent), 0 0 0 4px rgba(255, 255, 255, .85);
+  transition: transform .6s var(--ease-mola);
+}
+.equipe-card:hover .equipe-icone { transform: rotate(-8deg) scale(1.06); }
+.equipe-numero { position: absolute; top: 18px; right: 22px; z-index: 2; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(27, 32, 48, .55); background: rgba(255, 255, 255, .7); padding: 4px 9px; border-radius: 999px; backdrop-filter: blur(8px); }
+.equipe-corpo { position: relative; padding: 44px 28px 26px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.equipe-selo {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; color: var(--tom);
+  background: color-mix(in srgb, var(--tom) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tom) 25%, transparent);
+}
+.equipe-corpo h2 { font-size: 28px; font-weight: 650; letter-spacing: -.045em; margin-top: 4px; }
+.equipe-corpo p { font-size: 14px; line-height: 1.65; color: var(--text-secondary); }
+.equipe-acao { margin-top: auto; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 650; color: var(--tom); border-top: 1px solid var(--border); }
+.equipe-acao svg { transition: transform .45s var(--ease-mola); }
+.equipe-card:hover .equipe-acao svg { transform: translate(4px, -4px); }
+.equipe-rodape { font-size: 11px; color: var(--text-muted); text-align: center; }
+@media (max-width: 720px) {
+  .equipe-cards { grid-template-columns: 1fr; }
+  .equipe { justify-content: flex-start; gap: 32px; padding-top: 40px; }
+  .dashboard-header, .menu-intro { padding: 22px 20px; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-brand { margin: 10px 8px 0; padding: 12px 4px; justify-content: center; }
+}

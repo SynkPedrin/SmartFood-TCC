@@ -9,6 +9,7 @@ import { LogIn, Lock, Loader2, User as UserIcon } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { useBrand } from '@/lib/brand/BrandContext'
+import { MODO_SITE } from '@/lib/site'
 
 function Formulario() {
   const { entrar } = useAuth()
@@ -52,10 +53,12 @@ function Formulario() {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="login-cabeca">
+      <div className="login-arte" aria-hidden>
         <span className="logo-halo">
-          <BrandLogo size={58} radius={16} />
+          <BrandLogo size={72} radius={18} />
         </span>
+      </div>
+      <div className="login-cabeca">
         <div>
           <h1>{brand.name}</h1>
           <p>Área da equipe. O cardápio do cliente não precisa de login.</p>
@@ -100,7 +103,11 @@ function Formulario() {
       </button>
 
       <p className="login-rodape">
-        Veio fazer um pedido? <Link href="/totem">Abrir o cardápio</Link>
+        {MODO_SITE === 'equipe' ? (
+          <>É da cozinha? <Link href="/cozinha">Abrir a cozinha sem login</Link></>
+        ) : (
+          <>Veio fazer um pedido? <Link href="/totem">Abrir o cardápio</Link></>
+        )}
       </p>
     </motion.form>
   )
