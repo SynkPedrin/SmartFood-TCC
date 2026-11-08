@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChefHat, Send, X } from "lucide-react";
+import { Send, X } from "lucide-react";
+import { MascoteIA } from "./MascoteIA";
 import Markdown from "@/components/Markdown";
 import { useIAChat, nextChatId, type ChatMsg } from "@/lib/ia/useChat";
 
@@ -80,7 +81,7 @@ export default function ChefIA({
         {open ? (
           <X size={20} aria-hidden="true" />
         ) : (
-          <ChefHat size={21} aria-hidden="true" />
+          <MascoteIA tamanho={30} />
         )}
         <span>Chef IA</span>
       </button>
@@ -98,9 +99,7 @@ export default function ChefIA({
             transition={{ duration: 0.16 }}
           >
             <header className="chef-header">
-              <span className="chef-avatar">
-                <ChefHat size={19} aria-hidden="true" />
-              </span>
+              <MascoteIA tamanho={40} pensando={loading} />
               <div>
                 <strong id="chef-titulo">Chef IA</strong>
                 <small>

@@ -8,7 +8,6 @@ import {
   ClipboardList,
   Users,
   ChefHat,
-  Bot,
   BookOpen,
   UtensilsCrossed,
   RefreshCw,
@@ -24,6 +23,7 @@ import type { Indicadores } from "@/lib/ia/context";
 import type { PaginatedResponse, Mesa, Pedido, Produto } from "@/types";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { fotoCardapio } from "@/lib/cardapio";
+import { MascoteIA } from "@/components/MascoteIA";
 const brl = (v: string) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 export default function AdminDashboard() {
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className="dashboard-ai">
-            <Bot size={20} />
+            <MascoteIA tamanho={44} />
             <h3>Assistente do restaurante</h3>
             <p>
               Pergunte sobre as vendas do dia, o cardápio ou a ocupação das

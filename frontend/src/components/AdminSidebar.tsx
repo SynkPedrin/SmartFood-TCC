@@ -7,7 +7,6 @@ import {
   BookOpen,
   UtensilsCrossed,
   ClipboardList,
-  Bot,
   Home,
   ChefHat,
   Palette,
@@ -16,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
+import { MascoteIA } from "./MascoteIA";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useBrand } from "@/lib/brand/BrandContext";
 import { MODO_SITE } from "@/lib/site";
@@ -24,7 +24,7 @@ const nav = [
   { href: "/admin/cardapio", icon: BookOpen, label: "Cardápio" },
   { href: "/admin/mesas", icon: UtensilsCrossed, label: "Salão e mesas" },
   { href: "/admin/pedidos", icon: ClipboardList, label: "Pedidos" },
-  { href: "/admin/ia", icon: Bot, label: "Assistente IA" },
+  { href: "/admin/ia", icon: null, label: "Assistente IA" },
   { href: "/admin/personalizacao", icon: Palette, label: "Identidade da casa" },
 ];
 export function AdminSidebar() {
@@ -73,7 +73,7 @@ export function AdminSidebar() {
                 title={n.label}
                 className={`admin-nav-link ${ativo ? "active" : ""}`}
               >
-                <n.icon size={18} />
+                {n.icon ? <n.icon size={18} /> : <MascoteIA tamanho={20} parado />}
                 <span className="sidebar-label">{n.label}</span>
                 {n.href === "/admin/ia" && (
                   <small className="sidebar-label">IA</small>

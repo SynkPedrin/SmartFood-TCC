@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Send, User, RotateCcw, ChevronRight, Brain, BookPlus, MessageSquare } from 'lucide-react'
 import Markdown from '@/components/Markdown'
-import ParticleBall from '@/components/ParticleBall'
+import { MascoteIA } from '@/components/MascoteIA'
 import PontosDeAtencao from '@/components/PontosDeAtencao'
 import { useIAChat, nextChatId, type ChatMsg } from '@/lib/ia/useChat'
 import { useContasCerebro } from '@/lib/ia/useContas'
@@ -86,7 +86,7 @@ export default function IAPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <ParticleBall size={46} thinking={loading} />
+              <MascoteIA tamanho={52} pensando={loading} />
               <h1 className="page-title" style={{ marginBottom: 0 }}>SmartFood IA</h1>
             </div>
             <p className="page-sub">Converse com os dados do restaurante: cardápio, mesas e operação</p>
@@ -132,7 +132,7 @@ export default function IAPage() {
                 >
                   {/* Avatar */}
                   {msg.role === 'assistant'
-                    ? <ParticleBall size={34} thinking={!!msg.streaming} />
+                    ? <MascoteIA tamanho={36} pensando={!!msg.streaming} />
                     : (
                       <div style={{
                         width: 34, height: 34, borderRadius: 10, flexShrink: 0,
