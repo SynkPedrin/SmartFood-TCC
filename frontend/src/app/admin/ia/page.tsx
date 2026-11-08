@@ -35,7 +35,7 @@ function makeGreeting(): ChatMsg {
 export default function IAPage() {
   const { messages, loading, send, reset } = useIAChat('admin', [makeGreeting()])
   const [input, setInput] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const listaRef = useRef<HTMLDivElement>(null)
   const { brand } = useBrand()
   const { contas } = useContasCerebro()
   const conta = contas.find(c => c.slug === brand.accountId)
@@ -44,8 +44,12 @@ export default function IAPage() {
   const [aprendizado, setAprendizado] = useState('')
   const [salvando, setSalvando] = useState(false)
 
+  // Rola só a lista de mensagens, nunca a janela: scrollIntoView arrastava a
+  // página inteira para baixo ao abrir a tela. Só a saudação: não rola nada.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const lista = listaRef.current
+    if (!lista || messages.length <= 1) return
+    lista.scrollTo({ top: lista.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
   function submit(text: string) {
@@ -112,7 +116,7 @@ export default function IAPage() {
           overflow: 'hidden',
         }}>
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          <div ref={listaRef} style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
@@ -173,7 +177,6 @@ export default function IAPage() {
                 </motion.div>
               ))}
             </AnimatePresence>
-            <div ref={bottomRef} />
           </div>
 
           {/* Input */}
