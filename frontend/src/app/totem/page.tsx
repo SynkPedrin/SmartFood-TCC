@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
   categoriasApi,
@@ -21,6 +22,8 @@ import type {
   PaginatedResponse,
 } from "@/types";
 import ChefIA from "@/components/ChefIA";
+import { SeloConfirmado } from "@/components/experiencia/Celebracao";
+import { voarParaSacola } from "@/lib/experiencia/voar";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useBrand } from "@/lib/brand/BrandContext";
 import {
@@ -29,7 +32,6 @@ import {
   Minus,
   ArrowLeft,
   ArrowRight,
-  CheckCircle,
   Clock,
   X,
   Search,
@@ -56,6 +58,7 @@ function Acompanhamento({ codigo }: { codigo: string }) {
     refetchInterval: 5000,
   });
   const etapas = ["recebido", "preparando", "pronto", "entregue"];
+  const atual = data ? etapas.indexOf(data.status) : -1;
   return (
     <div className="order-progress" aria-live="polite">
       <p>
@@ -70,7 +73,7 @@ function Acompanhamento({ codigo }: { codigo: string }) {
           <span
             key={e}
             className={
-              data && etapas.indexOf(data.status) >= i ? "complete" : ""
+              atual >= i ? (atual === i ? "complete atual" : "complete") : ""
             }
           >
             {["Recebido", "Em preparo", "Pronto", "Entregue"][i]}
@@ -269,12 +272,16 @@ export default function TotemPage() {
         <Link href="/" className="btn btn-ghost welcome-back">
           <ArrowLeft size={16} /> Início
         </Link>
-        <BrandLogo size={88} />
-        <span className="eyebrow">AUTOATENDIMENTO</span>
+        <span className="logo-halo">
+          <BrandLogo size={88} />
+        </span>
+        <span className="eyebrow">
+          <i className="pulso" aria-hidden /> AUTOATENDIMENTO
+        </span>
         <h1>
           Uma boa refeição
           <br />
-          começa aqui.
+          <em>começa aqui.</em>
         </h1>
         <p>Escolha sua mesa e descubra o cardápio de {brand.name}.</p>
         {mesaQuery.isError ? (
@@ -344,11 +351,12 @@ export default function TotemPage() {
   if (pedido)
     return (
       <main className="table-welcome success-view">
-        <CheckCircle size={54} />
+        <SeloConfirmado />
         <span className="eyebrow">PEDIDO CONFIRMADO</span>
         <h1>
           Já está com
-          <br />a nossa cozinha.
+          <br />
+          <em>a nossa cozinha.</em>
         </h1>
         <p>
           Pedido <strong>#{pedido.id}</strong> · Mesa {mesa.numero}
@@ -356,7 +364,7 @@ export default function TotemPage() {
         {pedido.acompanhamento && (
           <Acompanhamento codigo={pedido.acompanhamento} />
         )}
-        <div className="order-summary">
+        <div className="order-summary borda-viva">
           {cart.map((i) => (
             <div key={i.produto.id}>
               <span>
@@ -400,6 +408,7 @@ export default function TotemPage() {
           <span>Cardápio da casa</span>
         </div>
         <span className="table-badge">
+          <i className="pulso" aria-hidden />
           Mesa {String(mesa.numero).padStart(2, "0")}
         </span>
         <button
@@ -472,6 +481,7 @@ export default function TotemPage() {
             onClick={() => setCategoria(null)}
             className={!categoria ? "selected" : ""}
           >
+            {!categoria && <PilulaAtiva />}
             Todos <span>{produtos.length}</span>
           </button>
           {categorias.map((c) => (
@@ -480,6 +490,7 @@ export default function TotemPage() {
               onClick={() => setCategoria(c.id)}
               className={categoria === c.id ? "selected" : ""}
             >
+              {categoria === c.id && <PilulaAtiva />}
               {c.nome}
             </button>
           ))}
@@ -553,7 +564,7 @@ export default function TotemPage() {
                           >
                             <Minus size={15} />
                           </button>
-                          <span>{item.qtd}</span>
+                          <span key={item.qtd}>{item.qtd}</span>
                           <button
                             disabled={item.qtd >= 99}
                             aria-label={`Aumentar ${p.nome}`}
@@ -565,7 +576,14 @@ export default function TotemPage() {
                       ) : (
                         <button
                           className="food-add"
-                          onClick={() => adicionar(p)}
+                          onClick={(e) => {
+                            adicionar(p);
+                            voarParaSacola(
+                              e.currentTarget
+                                .closest(".food-card")
+                                ?.querySelector("img"),
+                            );
+                          }}
                           aria-label={`Adicionar ${p.nome}`}
                         >
                           <Plus size={17} /> Adicionar
@@ -584,9 +602,14 @@ export default function TotemPage() {
         </footer>
       </div>
       {!!quantidade && (
-        <div className="cart-dock">
+        <div className="cart-dock borda-viva">
           <div>
-            <ShoppingBag size={22} />
+            <span className="doca-sacola">
+              <ShoppingBag size={20} />
+              <b className="doca-qtd" key={quantidade}>
+                {quantidade}
+              </b>
+            </span>
             <span>
               <strong>
                 {quantidade} {quantidade === 1 ? "item" : "itens"} no pedido
@@ -646,7 +669,7 @@ export default function TotemPage() {
                       >
                         <Minus size={14} />
                       </button>
-                      <span>{i.qtd}</span>
+                      <span key={i.qtd}>{i.qtd}</span>
                       <button
                         disabled={enviar.isPending || i.qtd >= 99}
                         aria-label={`Aumentar ${i.produto.nome}`}
@@ -704,5 +727,17 @@ export default function TotemPage() {
         </div>
       )}
     </main>
+  );
+}
+
+/** Fundo da categoria escolhida: desliza de um botão para o outro. */
+function PilulaAtiva() {
+  return (
+    <motion.span
+      layoutId="categoria-ativa"
+      className="cat-ativa"
+      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+      aria-hidden
+    />
   );
 }

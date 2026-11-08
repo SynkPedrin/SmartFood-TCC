@@ -23,11 +23,14 @@ const LIMITE_URGENTE = 20
 const INTERVALO_SEM_SOCKET = 5_000
 const INTERVALO_COM_SOCKET = 30_000
 
-const COLS: { key: Coluna; label: string; color: string; bg: string; border: string; shadow: string; actionLabel: string; nextStatus: PedidoStatus }[] = [
-  { key: 'recebido',   label: 'Novos Pedidos', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Iniciar Preparo', nextStatus: 'preparando' },
-  { key: 'preparando', label: 'Em Preparo',    color: '#f59e0b', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Marcar Pronto',   nextStatus: 'pronto' },
-  { key: 'pronto',     label: 'Prontos',       color: '#10b981', bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.35)', shadow: '0 6px 16px rgba(0,0,0,0.06)', actionLabel: 'Entregue',        nextStatus: 'entregue' },
+const COLS: { key: Coluna; label: string; color: string; actionLabel: string; nextStatus: PedidoStatus }[] = [
+  { key: 'recebido',   label: 'Novos pedidos', color: '#ff6b6b', actionLabel: 'Iniciar preparo', nextStatus: 'preparando' },
+  { key: 'preparando', label: 'Em preparo',    color: '#fbbf24', actionLabel: 'Marcar pronto',   nextStatus: 'pronto' },
+  { key: 'pronto',     label: 'Prontos',       color: '#34d399', actionLabel: 'Entregue',        nextStatus: 'entregue' },
 ]
+
+/** Pedido que entrou há menos disso ainda "acende" para chamar o olhar. */
+const RECENTE_MS = 45_000
 
 const agora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
@@ -46,6 +49,11 @@ function useTimer() {
 /** Minutos desde que o pedido entrou na fila. */
 function esperaEmMinutos(criadoEm: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(criadoEm).getTime()) / 60_000))
+}
+
+/** Entrou na fila há poucos segundos: o cartão acende para chamar o olhar. */
+function acabouDeChegar(criadoEm: string): boolean {
+  return Date.now() - new Date(criadoEm).getTime() < RECENTE_MS
 }
 
 function formatarEspera(minutos: number): string {
@@ -108,62 +116,55 @@ function Cozinha() {
 
   const byStatus = (s: Coluna) => pedidos.filter(p => p.status === s)
 
+  const novos = byStatus('recebido').length
+
   return (
     <div className="kitchen-shell">
-      {/* Header */}
       <header className="kitchen-header">
-        <BrandLogo size={36} radius={10} />
+        <span className="logo-halo">
+          <BrandLogo size={36} radius={10} />
+        </span>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ChefHat size={18} style={{ color: 'var(--terracotta)' }} />
-          <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <ChefHat size={18} style={{ color: 'var(--primary)' }} />
+          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.03em' }}>
             Cozinha {brand.name}
           </span>
         </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {byStatus('recebido').length > 0 && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '5px 12px', borderRadius: 10,
-                background: 'rgba(239,68,68,0.10)', border: '2px solid rgba(239,68,68,0.35)',
-                boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
-              }}>
-                <Bell size={13} style={{ color: '#ef4444' }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#ef4444' }}>
-                  {byStatus('recebido').length} novo{byStatus('recebido').length > 1 ? 's' : ''}
-                </span>
-              </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <AnimatePresence>
+            {novos > 0 && (
+              <motion.span
+                key="novos"
+                className="kds-pilula"
+                style={{ '--c': '#ff6b6b' } as React.CSSProperties}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Bell size={13} />
+                {novos} novo{novos > 1 ? 's' : ''}
+              </motion.span>
             )}
-          </div>
+          </AnimatePresence>
 
-          <div
+          <span
+            className="kds-pilula"
             title={conectado ? 'Recebendo pedidos em tempo real' : 'Sem tempo real: atualizando a cada 5s'}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              fontSize: 11.5, fontWeight: 700,
-              color: conectado ? '#10b981' : 'var(--text-muted)',
-            }}
+            style={{ '--c': conectado ? '#34d399' : '#a8a8b8' } as React.CSSProperties}
           >
-            <Radio size={13} />
-            {conectado ? 'ao vivo' : 'periódico'}
-          </div>
+            {conectado ? <i className="pulso" aria-hidden /> : <Radio size={13} />}
+            {conectado ? 'Ao vivo' : 'Periódico'}
+          </span>
 
           {isError && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 12px', borderRadius: 10,
-              background: 'rgba(239,68,68,0.10)', border: '2px solid rgba(239,68,68,0.35)',
-            }}>
-              <WifiOff size={13} style={{ color: '#ef4444' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Sem conexão com a API</span>
-            </div>
+            <span className="kds-pilula" style={{ '--c': '#ff6b6b' } as React.CSSProperties}>
+              <WifiOff size={13} /> Sem conexão com a API
+            </span>
           )}
 
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>
-            {time}
-          </div>
+          <span className="kds-relogio">{time || '--:--:--'}</span>
 
           <button
             onClick={() => refetch()}
@@ -181,43 +182,25 @@ function Cozinha() {
         </div>
       </header>
 
-      {/* Kanban columns */}
       <div className="kitchen-cols">
         {COLS.map(col => {
           const orders = byStatus(col.key)
+          const cor = { '--c': col.color } as React.CSSProperties
           return (
             <div key={col.key} className="kitchen-col">
-              {/* Column header */}
               <div className="kitchen-col-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                    padding: '6px 14px', borderRadius: 10,
-                    background: col.bg, border: `2px solid ${col.border}`,
-                    boxShadow: col.shadow,
-                  }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
-                    <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: 13, fontWeight: 800, color: col.color, letterSpacing: '-0.01em' }}>
-                      {col.label}
-                    </span>
-                    <span style={{
-                      minWidth: 22, height: 22, borderRadius: 7,
-                      background: col.color, color: '#fff',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 800,
-                    }}>
-                      {orders.length}
-                    </span>
-                  </div>
-                </div>
+                <span className="kds-coluna" style={cor}>
+                  <i className="pulso" aria-hidden />
+                  {col.label}
+                  <b key={orders.length}>{orders.length}</b>
+                </span>
               </div>
 
-              {/* Orders */}
               <div className="kitchen-col-body">
                 {orders.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-                    <CheckCircle size={32} style={{ opacity: 0.25, margin: '0 auto 10px', display: 'block' }} />
-                    <p style={{ fontSize: 13, fontWeight: 600 }}>Nenhum pedido aqui</p>
+                  <div className="kds-vazio">
+                    <CheckCircle size={34} />
+                    <p>Nenhum pedido aqui</p>
                   </div>
                 )}
 
@@ -225,6 +208,7 @@ function Cozinha() {
                   {orders.map(pedido => {
                     const espera = esperaEmMinutos(pedido.criado_em)
                     const urgente = espera >= LIMITE_URGENTE
+                    const recente = col.key === 'recebido' && acabouDeChegar(pedido.criado_em)
                     return (
                     <motion.div
                       key={pedido.id}
@@ -233,101 +217,67 @@ function Cozinha() {
                       animate="visible"
                       exit="exit"
                       layout
-                      className={`kitchen-order-card${urgente ? ' urgente' : ''}`}
+                      className={`kitchen-order-card${urgente ? ' urgente' : recente ? ' chegou' : ''}`}
+                      style={{ '--anel-cor': col.color } as React.CSSProperties}
                     >
-                      {/* Top row */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{
-                              fontFamily: 'Manrope, sans-serif',
-                              fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em',
-                              color: 'var(--text-primary)', lineHeight: 1,
-                            }}>
-                              {pedido.mesa_numero}
-                            </div>
+                            <div className="kds-mesa">{pedido.mesa_numero}</div>
                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                               Mesa
                             </div>
                             {urgente && (
-                              <span style={{
-                                padding: '2px 8px', borderRadius: 7,
-                                background: 'rgba(239,68,68,0.12)',
-                                border: '1.5px solid rgba(239,68,68,0.35)',
-                                color: '#ef4444', fontSize: 9, fontWeight: 800,
-                                textTransform: 'uppercase', letterSpacing: '0.08em',
-                              }}>
+                              <span className="kds-pilula" style={{ '--c': '#ff6b6b', padding: '2px 8px', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' } as React.CSSProperties}>
                                 Urgente
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginTop: 3 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>
                             Pedido #{pedido.id}
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: col.color }}>
-                            <Clock size={11} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 750, color: col.color, fontVariantNumeric: 'tabular-nums' }}>
+                            <Clock size={12} />
                             {formatarEspera(espera)}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{hora(pedido.criado_em)}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{hora(pedido.criado_em)}</div>
                         </div>
                       </div>
 
-                      {/* Items */}
-                      <div style={{
-                        padding: '10px 12px', borderRadius: 10,
-                        background: 'rgba(0,0,0,0.03)',
-                        border: '1px solid var(--border)',
-                        marginBottom: 12,
-                      }}>
-                        {pedido.itens.map((item, i) => (
+                      <div className="kds-itens">
+                        {pedido.itens.map(item => (
                           <div key={item.id} style={{
-                            display: 'flex', justifyContent: 'space-between',
-                            fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
-                            padding: '3px 0',
-                            borderBottom: i < pedido.itens.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                            display: 'flex', justifyContent: 'space-between', gap: 10,
+                            fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)',
+                            padding: '5px 0',
                           }}>
                             <span>
                               {item.produto_nome}
                               {item.observacao && (
-                                <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>
-                                  {item.observacao}
+                                <span style={{ display: 'block', fontSize: 11.5, fontWeight: 500, color: '#fbbf24', marginTop: 2 }}>
+                                  ⚑ {item.observacao}
                                 </span>
                               )}
                             </span>
-                            <span style={{
-                              fontFamily: 'Manrope, sans-serif',
-                              fontWeight: 800, color: col.color,
-                              minWidth: 24, textAlign: 'right',
-                            }}>×{item.quantidade}</span>
+                            <span style={{ fontWeight: 800, color: col.color, minWidth: 26, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                              ×{item.quantidade}
+                            </span>
                           </div>
                         ))}
                       </div>
 
-                      {/* Action button */}
-                      {col.nextStatus !== undefined && (
-                        <button
-                          onClick={() => mudarStatus.mutate({ id: pedido.id, status: col.nextStatus })}
-                          disabled={mudarStatus.isPending}
-                          style={{
-                            width: '100%', padding: '10px',
-                            borderRadius: 10, border: `2px solid ${col.border}`,
-                            background: col.bg,
-                            color: col.color, fontSize: 13, fontWeight: 800,
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                            fontFamily: 'Manrope, sans-serif',
-                            boxShadow: col.shadow,
-                            transition: 'all 0.16s ease',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.92)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                          onMouseLeave={e => { e.currentTarget.style.filter = ''; e.currentTarget.style.transform = '' }}
-                        >
-                          {col.key === 'pronto' ? <CheckCircle size={14} /> : <ChefHat size={14} />}
-                          {col.actionLabel}
-                        </button>
-                      )}
+                      <button
+                        className="kds-acao"
+                        style={cor}
+                        onClick={() => mudarStatus.mutate({ id: pedido.id, status: col.nextStatus })}
+                        disabled={mudarStatus.isPending}
+                      >
+                        {col.key === 'pronto' ? <CheckCircle size={15} /> : <ChefHat size={15} />}
+                        {col.actionLabel}
+                      </button>
                     </motion.div>
                     )
                   })}

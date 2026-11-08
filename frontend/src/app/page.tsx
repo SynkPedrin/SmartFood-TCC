@@ -48,7 +48,9 @@ export default function Home() {
     <main className="landing">
       <header className="landing-nav">
         <Link href="/" className="landing-brand">
-          <BrandLogo size={48} />
+          <span className="logo-halo">
+            <BrandLogo size={48} />
+          </span>
           <strong>
             {brand.name}
             <small>RESTAURANT WORKSPACE</small>
@@ -87,7 +89,8 @@ export default function Home() {
             </span>
           </div>
         </div>
-        <div className="hero-visual">
+        <div className="hero-visual" data-tilt="7">
+          <div className="hero-reflexo" aria-hidden />
           <img
             className="hero-dish"
             src="/images/menu/burgers/bacon-burger.webp"

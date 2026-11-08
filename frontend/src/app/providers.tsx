@@ -7,6 +7,8 @@ import { Toaster } from 'react-hot-toast'
 import { BrandProvider } from '@/lib/brand/BrandContext'
 import { AuthProvider } from '@/lib/auth/AuthContext'
 import { SalaoAoVivo } from '@/lib/salao/SalaoAoVivo'
+import { Ambiente } from '@/components/experiencia/Ambiente'
+import { LuzDoCursor } from '@/components/experiencia/LuzDoCursor'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -21,19 +23,24 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <MotionConfig reducedMotion="user">
         <AuthProvider>
           <BrandProvider>
+          <Ambiente />
+          <LuzDoCursor />
           {children}
           <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: '#111111',
+              background: 'rgba(20,20,30,0.9)',
               color: '#ffffff',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '14px',
+              backdropFilter: 'blur(16px) saturate(1.4)',
+              WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
               fontFamily: "'Manrope', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
+              padding: '10px 14px',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 20px 40px -14px rgba(14,10,30,0.5)',
             },
             success: { iconTheme: { primary: '#10b981', secondary: '#ffffff' } },
             error: { iconTheme: { primary: '#ef4444', secondary: '#ffffff' } },

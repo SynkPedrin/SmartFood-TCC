@@ -92,7 +92,9 @@ export default function AdminDashboard() {
     <div className="operations-dashboard">
       <header className="dashboard-header">
         <div>
-          <span className="eyebrow">VISÃO GERAL DA OPERAÇÃO</span>
+          <span className="eyebrow">
+            <i className="pulso" aria-hidden /> VISÃO GERAL DA OPERAÇÃO · AO VIVO
+          </span>
           <h1>Olá, {usuario?.first_name || usuario?.username || "equipe"}.</h1>
           <p>Seu restaurante, do salão à cozinha.</p>
         </div>
@@ -208,7 +210,7 @@ export default function AdminDashboard() {
               <ArrowUpRight size={18} />
             </Link>
           </div>
-          <div className="dashboard-ai">
+          <div className="dashboard-ai borda-viva">
             <Bot size={24} />
             <h3>
               Uma conversa.
