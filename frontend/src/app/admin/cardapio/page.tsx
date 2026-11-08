@@ -109,10 +109,9 @@ function CategoriasTab() {
               const a = ACCENTS[idx % ACCENTS.length]
               return (
                 <motion.div key={cat.id} variants={cardAnim} exit="exit" layout className="glass" style={{ padding: 22, position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${a.dot}, transparent)`, borderRadius: '16px 16px 0 0' }} />
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 20, background: a.bg, border: `1px solid ${a.border}`, fontSize: 11, fontWeight: 700, color: a.dot }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.dot }} />#{cat.id}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: 2, background: a.dot }} />Categoria
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => open(cat)} className="btn btn-ghost btn-icon btn-sm"><Pencil size={13} /></button>

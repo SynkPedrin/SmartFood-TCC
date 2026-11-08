@@ -8,14 +8,14 @@ import { mesasApi } from '@/lib/api'
 import type { Mesa, PaginatedResponse } from '@/types'
 import { MesaQR } from '@/components/MesaQR'
 import { Modal } from '@/components/Modal'
-import { QrCode, UtensilsCrossed, Plus, Pencil, Trash2, Users, CheckCircle, XCircle, Clock, Wrench } from 'lucide-react'
+import { QrCode, UtensilsCrossed, Plus, Pencil, Trash2, Users, CheckCircle, Clock, Wrench } from 'lucide-react'
 
 type Form = { numero: string; capacidade: string; status: Mesa['status'] }
 const EMPTY: Form = { numero: '', capacidade: '4', status: 'disponivel' }
 
 const STATUS_CFG: Record<Mesa['status'], { label: string; cls: string; badgeCls: string; dotCls: string; icon: React.ReactNode; color: string }> = {
   disponivel: { label: 'Disponível',  cls: 'mesa-ok',   badgeCls: 'badge-ok',   dotCls: 'dot-ok',   icon: <CheckCircle size={20} />, color: '#10b981' },
-  ocupada:    { label: 'Ocupada',     cls: 'mesa-err',  badgeCls: 'badge-err',  dotCls: 'dot-err',  icon: <XCircle     size={20} />, color: '#ef4444' },
+  ocupada:    { label: 'Ocupada',     cls: 'mesa-ocupada', badgeCls: 'badge-purple', dotCls: 'dot-ocupada', icon: <Users size={20} />, color: 'var(--primary)' },
   reservada:  { label: 'Reservada',   cls: 'mesa-warn', badgeCls: 'badge-warn', dotCls: 'dot-warn', icon: <Clock       size={20} />, color: '#f59e0b' },
   manutencao: { label: 'Manutenção',  cls: 'mesa-gray', badgeCls: 'badge-gray', dotCls: 'dot-gray', icon: <Wrench      size={20} />, color: '#6b7280' },
 }

@@ -90,8 +90,8 @@ export default function PedidosPage() {
           const Icon = s.icon
           return (
             <motion.div key={s.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="stat-card">
-              <div className="stat-icon" style={{ background: s.bg, color: s.color, border: `2px solid ${s.border}`, boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
-                <Icon size={19} strokeWidth={1.75} />
+              <div className="stat-icon" style={{ background: 'var(--superficie-2)', color: 'var(--text-secondary)', border: '1px solid var(--linha)', width: 36, height: 36, borderRadius: 8 }}>
+                <Icon size={17} strokeWidth={1.75} />
               </div>
               <div className="stat-number" style={{ fontSize: '1.65rem' }}>{indicadores.isLoading ? '…' : indicadores.isError ? '—' : s.value}</div>
               <div className="stat-label">{s.label}</div>
@@ -144,16 +144,10 @@ export default function PedidosPage() {
               const cfg = STATUS_CFG[p.status]
               return (
                 <motion.tr key={p.id} variants={rowAnim}>
-                  <td style={{ fontWeight: 800, color: 'var(--text-primary)' }}>#{p.id}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>#{p.id}</td>
                   <td>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 36, height: 36, borderRadius: 10,
-                      background: 'rgba(123,46,255,0.10)',
-                      border: '2px solid rgba(123,46,255,0.22)',
-                      fontSize: 14, fontWeight: 800, color: '#7b2eff',
-                    }}>
-                      {p.mesa_numero}
+                    <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                      Mesa {String(p.mesa_numero).padStart(2, '0')}
                     </span>
                   </td>
                   <td style={{ maxWidth: 300 }}>
@@ -161,7 +155,7 @@ export default function PedidosPage() {
                       {p.itens.map(i => `${i.produto_nome} x${i.quantidade}`).join(', ')}
                     </div>
                   </td>
-                  <td style={{ fontWeight: 800, color: 'var(--ok)', fontSize: 15 }}>
+                  <td style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                     {brl(Number(p.total))}
                   </td>
                   <td style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>{hora(p.criado_em)}</td>

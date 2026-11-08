@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Send, User, RotateCcw, ChevronRight, Brain, BookPlus, Sparkles } from 'lucide-react'
+import { Send, User, RotateCcw, ChevronRight, Brain, BookPlus, MessageSquare } from 'lucide-react'
 import Markdown from '@/components/Markdown'
 import ParticleBall from '@/components/ParticleBall'
 import PontosDeAtencao from '@/components/PontosDeAtencao'
@@ -215,7 +215,7 @@ export default function IAPage() {
         {/* Suggestions sidebar */}
         <div>
           <PontosDeAtencao onPerguntar={submit} ocupado={loading} />
-          <h3 style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
             Sugestões rápidas
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -252,7 +252,7 @@ export default function IAPage() {
                   e.currentTarget.style.color = 'var(--text-secondary)'
                 }}
               >
-                <Sparkles size={14} style={{ flexShrink: 0, color: '#7b2eff', opacity: 0.7 }} />
+                <MessageSquare size={14} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
                 <span style={{ flex: 1 }}>{s.label}</span>
                 <ChevronRight size={13} style={{ flexShrink: 0, opacity: 0.4 }} />
               </motion.button>

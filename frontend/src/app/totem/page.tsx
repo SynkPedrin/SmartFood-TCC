@@ -23,7 +23,6 @@ import type {
 } from "@/types";
 import ChefIA from "@/components/ChefIA";
 import { SeloConfirmado } from "@/components/experiencia/Celebracao";
-import { voarParaSacola } from "@/lib/experiencia/voar";
 import { MODO_SITE } from "@/lib/site";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useBrand } from "@/lib/brand/BrandContext";
@@ -269,24 +268,17 @@ export default function TotemPage() {
   }
   if (!mesa)
     return (
-      <main className="table-welcome">
+      <main className="table-welcome com-wallpaper">
         {MODO_SITE !== "mesa" && (
           <Link href="/" className="btn btn-ghost welcome-back">
             <ArrowLeft size={16} /> Início
           </Link>
         )}
-        <span className="logo-halo">
-          <BrandLogo size={88} />
-        </span>
-        <span className="eyebrow">
-          <i className="pulso" aria-hidden /> AUTOATENDIMENTO
-        </span>
-        <h1>
-          Uma boa refeição
-          <br />
-          <em>começa aqui.</em>
-        </h1>
-        <p>Escolha sua mesa e descubra o cardápio de {brand.name}.</p>
+        <div className="marca-moldura">
+          <BrandLogo size={56} />
+        </div>
+        <h1>Escolha sua mesa</h1>
+        <p>Selecione a mesa em que você está para ver o cardápio de {brand.name}.</p>
         {mesaQuery.isError ? (
           <div className="error-state" role="alert">
             Não foi possível consultar as mesas.{" "}
@@ -355,19 +347,15 @@ export default function TotemPage() {
     return (
       <main className="table-welcome success-view">
         <SeloConfirmado />
-        <span className="eyebrow">PEDIDO CONFIRMADO</span>
-        <h1>
-          Já está com
-          <br />
-          <em>a nossa cozinha.</em>
-        </h1>
+        <h1>Pedido enviado para a cozinha</h1>
         <p>
-          Pedido <strong>#{pedido.id}</strong> · Mesa {mesa.numero}
+          Pedido <strong>#{pedido.id}</strong> · Mesa{" "}
+          {String(mesa.numero).padStart(2, "0")}. Acompanhe o preparo abaixo.
         </p>
         {pedido.acompanhamento && (
           <Acompanhamento codigo={pedido.acompanhamento} />
         )}
-        <div className="order-summary borda-viva">
+        <div className="order-summary">
           {cart.map((i) => (
             <div key={i.produto.id}>
               <span>
@@ -411,7 +399,6 @@ export default function TotemPage() {
           <span>Cardápio da casa</span>
         </div>
         <span className="table-badge">
-          <i className="pulso" aria-hidden />
           Mesa {String(mesa.numero).padStart(2, "0")}
         </span>
         <button
@@ -428,9 +415,9 @@ export default function TotemPage() {
       <div className="menu-container">
         <section className="menu-intro">
           <div>
-            <span className="eyebrow">FEITO PARA O SEU MOMENTO</span>
-            <h1>O que vai bem hoje?</h1>
-            <p>Escolha seus favoritos. A gente cuida do preparo.</p>
+            <span className="eyebrow">{brand.name}</span>
+            <h1>Cardápio</h1>
+            <p>Peça direto da mesa. O tempo de preparo aparece em cada prato.</p>
           </div>
           <div className="menu-info">
             <Clock size={20} />
@@ -567,7 +554,7 @@ export default function TotemPage() {
                           >
                             <Minus size={15} />
                           </button>
-                          <span key={item.qtd}>{item.qtd}</span>
+                          <span>{item.qtd}</span>
                           <button
                             disabled={item.qtd >= 99}
                             aria-label={`Aumentar ${p.nome}`}
@@ -579,14 +566,7 @@ export default function TotemPage() {
                       ) : (
                         <button
                           className="food-add"
-                          onClick={(e) => {
-                            adicionar(p);
-                            voarParaSacola(
-                              e.currentTarget
-                                .closest(".food-card")
-                                ?.querySelector("img"),
-                            );
-                          }}
+                          onClick={() => adicionar(p)}
                           aria-label={`Adicionar ${p.nome}`}
                         >
                           <Plus size={17} /> Adicionar
@@ -605,11 +585,11 @@ export default function TotemPage() {
         </footer>
       </div>
       {!!quantidade && (
-        <div className="cart-dock borda-viva">
+        <div className="cart-dock">
           <div>
             <span className="doca-sacola">
               <ShoppingBag size={20} />
-              <b className="doca-qtd" key={quantidade}>
+              <b className="doca-qtd">
                 {quantidade}
               </b>
             </span>
@@ -672,7 +652,7 @@ export default function TotemPage() {
                       >
                         <Minus size={14} />
                       </button>
-                      <span key={i.qtd}>{i.qtd}</span>
+                      <span>{i.qtd}</span>
                       <button
                         disabled={enviar.isPending || i.qtd >= 99}
                         aria-label={`Aumentar ${i.produto.nome}`}
@@ -739,7 +719,7 @@ function PilulaAtiva() {
     <motion.span
       layoutId="categoria-ativa"
       className="cat-ativa"
-      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+      transition={{ duration: 0.2, ease: [0.2, 0.7, 0.2, 1] }}
       aria-hidden
     />
   );

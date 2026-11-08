@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       <header className="dashboard-header">
         <div>
           <span className="eyebrow">
-            <i className="pulso" aria-hidden /> VISÃO GERAL DA OPERAÇÃO · AO VIVO
+            <i className="pulso pulso-vivo" aria-hidden /> Visão geral · atualiza sozinha
           </span>
           <h1>Olá, {usuario?.first_name || usuario?.username || "equipe"}.</h1>
           <p>Seu restaurante, do salão à cozinha.</p>
@@ -210,19 +210,15 @@ export default function AdminDashboard() {
               <ArrowUpRight size={18} />
             </Link>
           </div>
-          <div className="dashboard-ai borda-viva">
-            <Bot size={24} />
-            <h3>
-              Uma conversa.
-              <br />
-              Mais clareza para decidir.
-            </h3>
+          <div className="dashboard-ai">
+            <Bot size={20} />
+            <h3>Assistente do restaurante</h3>
             <p>
-              Consulte a operação e explore melhorias com o assistente do
-              restaurante.
+              Pergunte sobre as vendas do dia, o cardápio ou a ocupação das
+              mesas. Ele responde com os dados da casa.
             </p>
             <Link href="/admin/ia" className="btn btn-primary">
-              Conversar com o assistente <ArrowRight size={14} />
+              Abrir assistente <ArrowRight size={14} />
             </Link>
           </div>
         </section>

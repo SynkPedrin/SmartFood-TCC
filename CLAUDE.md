@@ -140,6 +140,8 @@ Trocar de conta: **Admin → Personalização → Conta ativa**. Ensinar algo à
 - `equipe` → https://smartfood-equipe.vercel.app (projeto `smartfood-equipe`): a raiz mostra só **Cozinha** (sem login) e **Gestor** (com senha); `/totem` redireciona.
 - sem valor: tudo junto (desenvolvimento local).
 
+Para demonstração: `python manage.py simular_turno` cria um almoço em andamento (pedidos em todas as etapas, mesas ocupadas, faturamento do dia) pelas regras normais do sistema; `--reiniciar` refaz com tempos de espera frescos e só mexe nos pedidos que ele mesmo criou.
+
 `NEXT_PUBLIC_MESA_URL` faz o QR code gerado na gestão apontar para o site das mesas. A cozinha não tem login: `PermissaoPedido` libera sem token só `GET ?aberto=true` e avançar status (preparando/pronto/entregue); cancelar e o resto exigem a equipe. `scripts/publicar.sh` grava as variáveis e republica os dois projetos.
 
 ### Environment variables

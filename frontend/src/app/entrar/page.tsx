@@ -48,20 +48,20 @@ function Formulario() {
   return (
     <motion.form
       onSubmit={enviar}
-      className="login-card borda-viva"
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="login-card"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
     >
       <div className="login-arte" aria-hidden>
-        <span className="logo-halo">
-          <BrandLogo size={72} radius={18} />
-        </span>
+        <div>
+          <BrandLogo size={44} radius={10} />
+        </div>
       </div>
       <div className="login-cabeca">
         <div>
           <h1>{brand.name}</h1>
-          <p>Área da equipe. O cardápio do cliente não precisa de login.</p>
+          <p>Acesso da equipe. Entre com seu usuário e senha.</p>
         </div>
       </div>
 
@@ -115,7 +115,7 @@ function Formulario() {
 
 export default function EntrarPage() {
   return (
-    <main className="login-palco">
+    <main className="login-palco com-wallpaper">
       <Suspense fallback={null}>
         <Formulario />
       </Suspense>

@@ -118,9 +118,7 @@ function Cozinha() {
   return (
     <div className="kitchen-shell">
       <header className="kitchen-header">
-        <span className="logo-halo">
-          <BrandLogo size={36} radius={10} />
-        </span>
+        <BrandLogo size={36} radius={10} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <ChefHat size={18} style={{ color: 'var(--primary)' }} />
@@ -151,7 +149,7 @@ function Cozinha() {
             title={conectado ? 'Recebendo pedidos em tempo real' : 'Sem tempo real: atualizando a cada 5s'}
             style={{ '--c': conectado ? '#34d399' : '#a8a8b8' } as React.CSSProperties}
           >
-            {conectado ? <i className="pulso" aria-hidden /> : <Radio size={13} />}
+            {conectado ? <i className="pulso pulso-vivo" aria-hidden /> : <Radio size={13} />}
             {conectado ? 'Ao vivo' : 'Periódico'}
           </span>
 
@@ -187,7 +185,6 @@ function Cozinha() {
             <div key={col.key} className="kitchen-col">
               <div className="kitchen-col-header">
                 <span className="kds-coluna" style={cor}>
-                  <i className="pulso" aria-hidden />
                   {col.label}
                   <b key={orders.length}>{orders.length}</b>
                 </span>
@@ -214,7 +211,7 @@ function Cozinha() {
                       animate="visible"
                       exit="exit"
                       layout
-                      className={`kitchen-order-card${urgente ? ' urgente' : recente ? ' chegou' : ''}`}
+                      className={`kitchen-order-card${urgente ? ' urgente' : ''}`}
                       style={{ '--anel-cor': col.color } as React.CSSProperties}
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -225,8 +222,13 @@ function Cozinha() {
                               Mesa
                             </div>
                             {urgente && (
-                              <span className="kds-pilula" style={{ '--c': '#ff6b6b', padding: '2px 8px', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' } as React.CSSProperties}>
-                                Urgente
+                              <span className="kds-tag" style={{ '--c': '#f87171' } as React.CSSProperties}>
+                                Atrasado
+                              </span>
+                            )}
+                            {!urgente && recente && (
+                              <span className="kds-tag" style={{ '--c': '#a5b4fc' } as React.CSSProperties}>
+                                Novo
                               </span>
                             )}
                           </div>
@@ -236,7 +238,7 @@ function Cozinha() {
                         </div>
 
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 750, color: col.color, fontVariantNumeric: 'tabular-nums' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 650, color: urgente ? '#f87171' : 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                             <Clock size={12} />
                             {formatarEspera(espera)}
                           </div>
@@ -254,12 +256,12 @@ function Cozinha() {
                             <span>
                               {item.produto_nome}
                               {item.observacao && (
-                                <span style={{ display: 'block', fontSize: 11.5, fontWeight: 500, color: '#fbbf24', marginTop: 2 }}>
-                                  ⚑ {item.observacao}
+                                <span style={{ display: 'block', fontSize: 11.5, fontWeight: 500, color: '#fcd34d', marginTop: 2 }}>
+                                  Obs.: {item.observacao}
                                 </span>
                               )}
                             </span>
-                            <span style={{ fontWeight: 800, color: col.color, minWidth: 26, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--text-primary)', minWidth: 26, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                               ×{item.quantidade}
                             </span>
                           </div>

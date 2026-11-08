@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, ChefHat, LayoutDashboard, Lock, Radio } from "lucide-react";
+import { ArrowRight, ChefHat, LayoutDashboard, Lock, MonitorSmartphone } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useBrand } from "@/lib/brand/BrandContext";
 
 /**
- * Entrada do site da equipe: só dois caminhos.
+ * Entrada do site da equipe: dois postos de trabalho.
  * A cozinha abre direto (fica num monitor fixo, sem login);
  * a gestão pede usuário e senha.
  */
@@ -13,20 +13,18 @@ const acessos = [
   {
     href: "/cozinha",
     icon: ChefHat,
-    numero: "01",
     nome: "Cozinha",
-    texto: "Fila de pedidos em tempo real, do recebido ao entregue.",
-    selo: { icon: Radio, texto: "Acesso direto" },
+    texto: "Fila de pedidos por etapa, atualizada em tempo real.",
+    selo: { icon: MonitorSmartphone, texto: "Sem login" },
     acao: "Abrir a cozinha",
     arte: "esquerda",
   },
   {
     href: "/admin",
     icon: LayoutDashboard,
-    numero: "02",
     nome: "Gestor",
-    texto: "Cardápio, salão, pedidos, indicadores e o assistente com IA.",
-    selo: { icon: Lock, texto: "Requer senha" },
+    texto: "Cardápio, mesas, pedidos, indicadores do dia e assistente.",
+    selo: { icon: Lock, texto: "Com senha" },
     acao: "Entrar na gestão",
     arte: "direita",
   },
@@ -35,48 +33,40 @@ const acessos = [
 export default function AreaDaEquipe() {
   const { brand } = useBrand();
   return (
-    <main className="equipe">
+    <main className="equipe com-wallpaper">
       <header className="equipe-topo">
-        <span className="logo-halo">
-          <BrandLogo size={96} />
-        </span>
-        <span className="eyebrow">
-          <i className="pulso" aria-hidden /> ÁREA DA EQUIPE
-        </span>
-        <h1>
-          {brand.name}
-          <br />
-          <em>por trás de cada prato.</em>
-        </h1>
-        <p>Escolha onde você vai trabalhar agora.</p>
+        <div>
+          <BrandLogo size={48} />
+        </div>
+        <div>
+          <h1>Área da equipe</h1>
+          <p>{brand.name}. Escolha o seu posto de trabalho.</p>
+        </div>
       </header>
 
       <div className="equipe-cards">
         {acessos.map((a) => (
-          <Link key={a.href} href={a.href} className="equipe-card luz">
-            <div className={`equipe-arte arte-${a.arte}`} aria-hidden>
-              <span className="equipe-icone">
-                <a.icon size={28} />
-              </span>
-              <span className="equipe-numero">{a.numero}</span>
-            </div>
+          <Link key={a.href} href={a.href} className="equipe-card">
+            <div className={`equipe-arte arte-${a.arte}`} aria-hidden />
             <div className="equipe-corpo">
-              <span className="equipe-selo">
-                <a.selo.icon size={13} /> {a.selo.texto}
-              </span>
-              <h2>{a.nome}</h2>
+              <div className="equipe-linha">
+                <h2>
+                  <a.icon size={20} /> {a.nome}
+                </h2>
+                <span className="equipe-selo">
+                  <a.selo.icon size={12} /> {a.selo.texto}
+                </span>
+              </div>
               <p>{a.texto}</p>
               <span className="equipe-acao">
-                {a.acao} <ArrowUpRight size={18} />
+                {a.acao} <ArrowRight size={16} />
               </span>
             </div>
           </Link>
         ))}
       </div>
 
-      <footer className="equipe-rodape">
-        {brand.name} · Gestão para restaurantes · Projeto de TCC UniSalesiano 2026
-      </footer>
+      <footer className="equipe-rodape">{brand.name} · Projeto de TCC UniSalesiano 2026</footer>
     </main>
   );
 }

@@ -8,7 +8,6 @@ import { BrandProvider } from '@/lib/brand/BrandContext'
 import { AuthProvider } from '@/lib/auth/AuthContext'
 import { SalaoAoVivo } from '@/lib/salao/SalaoAoVivo'
 import { Ambiente } from '@/components/experiencia/Ambiente'
-import { LuzDoCursor } from '@/components/experiencia/LuzDoCursor'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,7 +23,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <BrandProvider>
           <Ambiente />
-          <LuzDoCursor />
           {children}
           <Toaster
           position="top-right"
